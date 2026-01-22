@@ -81,7 +81,20 @@ The project demonstrates modern **Software Engineering principles**, **DevOps pr
   - Logs and coverage trends
 
 ---
+## 🔁 Flow Summary
 
-### 🔁 Flow Summary
+1. **Developer Commit/Push** → A developer pushes code changes to the GitHub repository.  
+2. **Webhook Triggered** → GitHub sends a webhook event to the backend automatically.  
+3. **Backend Orchestration** → Node.js backend extracts commit + changed file metadata and stores it in the database.  
+4. **AI Test Generation** → AI analyzes the changes and generates **unit + API test cases** automatically.  
+5. **CI/CD Execution** → GitHub Actions pipeline builds the project and runs the generated tests.  
+6. **Results Stored** → Test results, logs, and coverage reports are saved in the database.  
+7. **Dashboard Updated** → Frontend dashboard shows commit analytics, test status, logs, and coverage trends.
+
+---
+
+## 📌 Use Case Diagram
+
+![Use Case Diagram](./use_case_diagram.png)
 
 
