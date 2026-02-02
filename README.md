@@ -98,3 +98,10 @@ The project demonstrates modern **Software Engineering principles**, **DevOps pr
 ![Use Case Diagram](./use_case_diagram.png)
 
 
+## 📌 Data Flow Diagram (Level 0)
+
+![Data Flow Diagram](./DFD_L0.png)
+
+## 📌 Data Flow Diagram (Level 1)
+
+![Data Flow Diagram](./DFD_L1.png)
