@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Test Runner</title>
+    <style>body{font-family:Arial,Helvetica,sans-serif;max-width:800px;margin:40px auto;padding:0 16px;}label{display:block;margin-top:12px;}button{margin-top:12px;padding:8px 12px;}</style>
+  </head>
+  <body>
+    <h1>AI Test Runner — Upload or Choose Sample</h1>
+
+    <form method="post" enctype="multipart/form-data">
+      <label>Upload file to test</label>
+      <input type="file" name="file" />
+      <button type="submit">Run on uploaded file</button>
+    </form>
+
+    <hr />
+
+    <form method="post">
+      <label>Select a sample from repository</label>
+      <select name="sample">
+        <option value="">-- choose sample --</option>
+        {% for s in samples %}
+        <option value="{{ s }}">{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Run on selected sample</button>
+    </form>
+  </body>
+  </html>
