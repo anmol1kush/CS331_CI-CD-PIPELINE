@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Test Result</title>
+    <style>body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;}pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}</style>
+  </head>
+  <body>
+    <h1>Result for: {{ filename }}</h1>
+    <a href="/">◀ Back</a>
+    <h2>Output</h2>
+    <pre>{{ result | tojson(indent=2) }}</pre>
+  </body>
+  </html>

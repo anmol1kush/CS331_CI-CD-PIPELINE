@@ -2,99 +2,92 @@
 
 ## 📌 Project Overview
 
-This project implements an **AI-driven automated test case generation system** integrated with a **CI/CD pipeline**.  
-The system is **event-driven**, where **code commits automatically trigger AI-based test generation and CI/CD execution**.
+This project implements an AI-driven automated test case generation system integrated with a CI/CD pipeline. The system is event-driven: code commits trigger webhooks, the backend analyzes changes and invokes AI to generate tests, and a CI/CD pipeline runs the generated tests.
 
-A **read-only frontend dashboard** is provided to visualize:
-- Commit activity
-- Test results
-- Execution logs
-
-The project demonstrates modern **Software Engineering principles**, **DevOps practices**, and **AI-assisted automation**.
+The repository contains:
+- `app.py` — CLI-style runner that calls `stage0_compile.file_reader` to process code samples.
+- `webapp.py` — Flask-based web UI to upload or select sample files and display results.
+- `Backend/src` — Node.js backend (webhook/dashboard parts).
 
 ---
 
 ## 🎯 Objectives
 
-- Automate test case generation using AI  
-- Trigger CI/CD pipelines automatically on code commits  
-- Reduce manual testing effort  
-- Provide real-time visibility into commits, test results, and logs  
-- Demonstrate scalable and modular system design  
+- Automate test case generation using AI
+- Trigger CI/CD pipelines automatically on commits
+- Provide a dashboard and logs for visibility
 
 ---
 
-## 📊 Requirement Analysis
+## 🔁 Quick Start
 
-### 🔹 Functional Requirements
+**Prerequisites:** Python 3.9+ and pip. Node.js is optional if you want to run the Node backend.
 
-- The system shall detect code commits automatically.
-- The system shall trigger a webhook on every commit.
-- The system shall generate unit and API test cases using AI.
-- The system shall execute generated tests via a CI/CD pipeline.
-- The system shall store test results, logs, and coverage data.
-- The system shall display commit analytics on the dashboard.
-- The system shall display test results and logs on the dashboard.
+- **Create & activate Python virtualenv (optional but recommended):**
 
----
+```bash
+python3 -m venv cicd
+source cicd/bin/activate
+```
 
-### 🔹 Non-Functional Requirements
+- **Install Python dependencies:**
 
-- **Automation:** No manual intervention for test generation  
-- **Scalability:** Handle multiple commits and contributors  
-- **Reliability:** Ensure accurate test execution and logging  
-- **Maintainability:** Modular and clean codebase  
-- **Security:** Restricted dashboard access for authorized users  
+```bash
+pip install -r requirements.txt
+```
 
----
+- **Run the Flask web UI (recommended):**
 
-## 🔄 System Flow (Detailed)
+```bash
+python3 webapp.py
+```
 
-### Step-by-Step Flow
+Open http://localhost:5000 in your browser. The UI allows uploading a file or choosing an existing sample from `samples/` and shows the output returned by `process_submission()`.
 
-#### 1. Code Commit
-- Developer pushes code to the Git repository.
+- **Run the CLI runner (prints to terminal):**
 
-#### 2. Webhook Trigger
-- GitHub automatically sends a webhook event to the backend.
+```bash
+python3 app.py
+```
 
-#### 3. Backend Orchestration
-- Node.js backend parses commit data and changed files.
-- Commit metadata is stored in the database.
+- **Optional: start Node backend (if you use the dashboard/webhook components):**
 
-#### 4. AI Test Case Generation
-- AI analyzes code changes.
-- Unit and API test cases are generated automatically.
+```bash
+cd Backend/src
+# install dependencies if package.json exists
+npm install
+node app.js
+```
 
-#### 5. CI/CD Pipeline Execution
-- GitHub Actions pipeline is triggered.
-- Project is built and generated tests are executed.
-
-#### 6. Result Storage
-- Test results, logs, and coverage reports are stored in the database.
-
-#### 7. Dashboard Visualization
-- Frontend dashboard displays:
-  - Who committed code
-  - Number of commits per user
-  - Test pass/fail status
-  - Logs and coverage trends
-
----
-## 🔁 Flow Summary
-
-1. **Developer Commit/Push** → A developer pushes code changes to the GitHub repository.  
-2. **Webhook Triggered** → GitHub sends a webhook event to the backend automatically.  
-3. **Backend Orchestration** → Node.js backend extracts commit + changed file metadata and stores it in the database.  
-4. **AI Test Generation** → AI analyzes the changes and generates **unit + API test cases** automatically.  
-5. **CI/CD Execution** → GitHub Actions pipeline builds the project and runs the generated tests.  
-6. **Results Stored** → Test results, logs, and coverage reports are saved in the database.  
-7. **Dashboard Updated** → Frontend dashboard shows commit analytics, test status, logs, and coverage trends.
+Files uploaded via the web UI are stored in an `uploads/` folder created automatically at the project root.
 
 ---
 
-## 📌 Use Case Diagram
+## 🔄 System Flow (concise)
 
-![Use Case Diagram](./use_case_diagram.png)
+1. Developer pushes code → Git sends webhook to backend
+2. Backend extracts changed files and metadata
+3. AI generates unit/API test cases for changed code
+4. CI/CD (e.g., GitHub Actions) runs generated tests
+5. Results, logs and coverage are stored and surfaced on the dashboard
+
+---
+
+## 📌 Diagrams
+
+<p align="center">
+  <img src="./use_case_diagram.png" alt="Use Case Diagram" style="max-width:100%;height:auto;">
+</p>
+
+<p align="center">
+  <img src="./DFD_L0.png" alt="Data Flow Diagram L0" style="max-width:100%;height:auto;">
+</p>
+
+<p align="center">
+  <img src="./DFD_L1.png" alt="Data Flow Diagram L1" style="max-width:100%;height:auto;">
+</p>
+
+---
+
 
 
