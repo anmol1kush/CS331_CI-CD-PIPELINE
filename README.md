@@ -87,6 +87,9 @@ Files uploaded via the web UI are stored in an `uploads/` folder created automat
   <img src="./DFD_L1.png" alt="Data Flow Diagram L1" style="max-width:100%;height:auto;">
 </p>
 
+<p align="center">
+  <img src="./key_class.png" alt="E-R Diagram" style="max-width:100%;height:auto;">
+</p>
 ---
 
 
