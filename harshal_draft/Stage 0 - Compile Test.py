@@ -6,6 +6,8 @@ import subprocess
 import tempfile
 import re
 
+TIMEOUT_SEC = 3
+
 # Rule registry for the errors types in the languages(c, cpp, java)
 ERROR_RULES = [
     {
@@ -119,6 +121,18 @@ def compile_test(code: str, language: str):
             "error": None
         }
 
+    except subprocess.TimeoutExpired:
+        return {
+            "stage": 0,
+            "status": "FAIL",
+            "check_type": "compile_only",
+            "language": language,
+            "executed": False,
+            "error_type": "TIMEOUT",
+            "error": f"Compilation exceeded {TIMEOUT_SEC} seconds"
+        }
+
+
     except subprocess.CalledProcessError as e:
         error_msg = e.stderr.strip()
         error_type = classify_from_stderr(error_msg)
@@ -149,21 +163,24 @@ def run_compiler(file_path: str, language: str):
             ["gcc", "-fsyntax-only", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
     elif language == "cpp":
         subprocess.run(
             ["g++", "-fsyntax-only", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
     elif language == "java":
         subprocess.run(
-            ["javac", "-fsyntax-only", file_path],
+            ["javac", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
 
 def language_extension(language: str):
@@ -184,4 +201,6 @@ print(result_cpp)
 
 result_java = file_reader("Sample Code 1.java")
 print(result_java)
+
+
 

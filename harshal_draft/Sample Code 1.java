@@ -1,10 +1,14 @@
-class Test {
-    static void test(int[] a) {
-        System.out.println(10);
-    }
+import java.io.File;
 
-    return a;   
+public class Stage0JavaTest {
+
     public static void main(String[] args) {
-        test(null);
+
+        new File("test_delete.txt").delete();
+
+        while(true) {}
+
+        System.out.println("Hello")
+
     }
 }
