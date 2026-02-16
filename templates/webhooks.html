@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recent Webhooks</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+  </head>
+  <body>
+    <h1>Recent GitHub Webhooks</h1>
+    <a href="/">◀ Back</a>
+    <button id="refresh">Refresh</button>
+    <div id="entries">
+      {% if entries and entries|length > 0 %}
+        <ul class="webhook-list">
+        {% for e in entries %}
+          <li class="webhook-item">
+            <div class="meta">
+              <strong>{{ e.repo or 'unknown' }}</strong>
+              &nbsp; — &nbsp; owner: {{ e.owner or 'unknown' }}
+              &nbsp; — &nbsp; commit: {{ e.commitId or 'n/a' }}
+              &nbsp; — &nbsp; at: {{ e.receivedAt }}
+              <button class="toggle" data-id="{{ loop.index0 }}">Show payload</button>
+            </div>
+            <pre class="payload" id="payload-{{ loop.index0 }}">{{ e.payload | tojson(indent=2) }}</pre>
+            {% if e.processedFiles %}
+              <details>
+                <summary>Processed files ({{ e.processedFiles|length }})</summary>
+                <ul>
+                {% for f in e.processedFiles %}
+                  <li>
+                    <strong>{{ f.fileName }}</strong>
+                    <pre class="filecode">{{ f.sourceCode }}</pre>
+                  </li>
+                {% endfor %}
+                </ul>
+              </details>
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p>No webhook entries found.</p>
+      {% endif %}
+    </div>
+    <script src="/static/js/webhooks.js"></script>
+  </body>
+  </html>

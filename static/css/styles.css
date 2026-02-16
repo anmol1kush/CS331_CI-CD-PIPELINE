@@ -1,0 +1,7 @@
+body{font-family:Arial,Helvetica,sans-serif;max-width:1000px;margin:24px auto;padding:0 16px}
+.webhook-list{list-style:none;padding:0}
+.webhook-item{border:1px solid #e2e8f0;padding:12px;border-radius:6px;margin:8px 0;background:#fff}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.payload{display:none;background:#0f172a;color:#e6eef8;padding:12px;border-radius:6px;overflow:auto}
+.filecode{background:#f6f8fa;padding:8px;border-radius:6px;overflow:auto}
+button.toggle{margin-left:auto}

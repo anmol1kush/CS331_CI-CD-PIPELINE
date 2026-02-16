@@ -1,0 +1,14 @@
+{
+  "name": "cs331-ci-cd-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.4.0",
+    "mongodb": "^5.9.0"
+  }
+}

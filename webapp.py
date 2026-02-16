@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
+import requests
 import os
 from app import process_submission, SUPPORTED_EXT
 
@@ -9,6 +10,9 @@ BASE_DIR = os.path.dirname(__file__)
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 SAMPLES_DIR = os.path.join(BASE_DIR, "samples")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# API backend url (when running in containers, the service name 'api' is resolvable)
+API_URL = os.environ.get("API_URL", "http://api:3000")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -38,6 +42,23 @@ def index():
         return redirect(url_for("index"))
 
     return render_template("index.html", samples=samples)
+
+
+@app.route("/webhooks", methods=["GET"])
+def show_webhooks():
+    """Fetch recent webhook entries from the Node API and render them."""
+    try:
+        resp = requests.get(f"{API_URL}/webhooks", timeout=5)
+        if resp.status_code == 200:
+            entries = resp.json()
+        else:
+            entries = []
+            flash(f"API returned status {resp.status_code}")
+    except Exception as e:
+        entries = []
+        flash(f"Failed to reach API at {API_URL}: {e}")
+
+    return render_template("webhooks.html", entries=entries)
 
 
 if __name__ == "__main__":

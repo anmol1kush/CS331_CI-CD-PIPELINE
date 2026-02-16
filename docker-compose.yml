@@ -23,6 +23,7 @@ services:
       - ./Backend/src:/usr/src/app
     depends_on:
       - db
+      - mongo
 
   worker:
     build:
@@ -44,8 +45,17 @@ services:
     ports:
       - "5432:5432"
 
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
 volumes:
   db_data:
+  mongo_data:
 
 networks:
   default:
