@@ -140,6 +140,36 @@ Notes & assumptions:
 - Python services reuse the repository `requirements.txt` to install Python dependencies.
 - Persistent Postgres data is stored in a Docker volume named `db_data`.
 
+Docker Compose notes:
+
+- If `make build` fails with `make: docker-compose: No such file or directory`, your system has no `docker-compose` binary. Modern Docker installations provide the Compose V2 plugin which is invoked as `docker compose` (note the space).
+- The project's `Makefile` detects either `docker-compose` or `docker compose`. If neither is found you can install one of them:
+
+  - Install Docker Compose V2 plugin (recommended with recent Docker Engine):
+
+  ```bash
+  # Debian/Ubuntu example
+  sudo apt update
+  sudo apt install docker.io  # if Docker Engine is missing
+  # Ensure Docker CLI has compose plugin; or install using Docker's docs:
+  # https://docs.docker.com/compose/install/
+  ```
+
+  - Or install the standalone `docker-compose` binary:
+
+  ```bash
+  sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+  ```
+
+After installing, re-run:
+
+```bash
+make build
+make up
+```
+
 If you'd like, I can also:
 
 - Add a small `package.json` placeholder for the Node service and an example `requirements.txt` subset so images install only required packages.
