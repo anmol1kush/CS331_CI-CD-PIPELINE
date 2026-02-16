@@ -1,3 +1,4 @@
+````markdown
 # AI-Based Automated Test Case Generation Integrated with CI/CD
 
 ## 📌 Project Overview
@@ -93,4 +94,55 @@ Files uploaded via the web UI are stored in an `uploads/` folder created automat
 ---
 
 
+## Microservices / Docker (Local)
 
+This repository includes Dockerfiles for the Flask web UI, the Node.js backend, and a Python worker, and a `docker-compose.yml` to build and run everything locally on one machine.
+
+- Single-command local build & deploy (recommended):
+
+```bash
+make build     # builds all service images in parallel
+make up        # starts services in background (detached)
+```
+
+- Or with docker-compose directly:
+
+```bash
+docker-compose up --build -d
+```
+
+- Stop and remove services:
+
+```bash
+make down
+# or
+docker-compose down
+```
+
+- View logs:
+
+```bash
+make logs
+```
+
+Files added for local microservice orchestration:
+
+- `Dockerfile.web` — Dockerfile for the Flask UI (`webapp.py`)
+- `Backend/src/Dockerfile.api` — Dockerfile for the Node API (`Backend/src/app.js`)
+- `Dockerfile.worker` — Dockerfile for the Python worker (`stage0_compile.py`)
+- `docker-compose.yml` — orchestrates `web`, `api`, `worker`, and `db` (Postgres)
+- `Makefile` — convenience targets: `build`, `up`, `down`, `logs`, `ps`
+
+Notes & assumptions:
+
+- This setup is intended for local development and testing only (single-machine deployment).
+- The Node backend will run `node app.js`. If you add dependencies, include a `package.json` in `Backend/src`.
+- Python services reuse the repository `requirements.txt` to install Python dependencies.
+- Persistent Postgres data is stored in a Docker volume named `db_data`.
+
+If you'd like, I can also:
+
+- Add a small `package.json` placeholder for the Node service and an example `requirements.txt` subset so images install only required packages.
+- Add healthchecks, a reverse-proxy (Traefik / Nginx) or environment-specific compose overrides.
+
+````

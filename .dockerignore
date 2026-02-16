@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+venv
+cicd
+node_modules
+.git
+.venv
+uploads
+*.log
