@@ -21,6 +21,8 @@ services:
       - "3000:3000"
     volumes:
       - ./Backend/src:/usr/src/app
+    env_file:
+      - ./Backend/.env
     depends_on:
       - db
       - mongo
