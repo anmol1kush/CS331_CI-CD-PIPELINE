@@ -1,9 +1,60 @@
+'''
+Stage 0: Compilation / Syntax Check
+'''
 import os
 import subprocess
 import tempfile
+import re
 
+TIMEOUT_SEC = 3
 
-# Stage 0: Compilation / Syntax Check
+# Rule registry for the errors types in the languages(c, cpp, java)
+ERROR_RULES = [
+    {
+        "type": "SyntaxError",
+        "patterns": [
+            r"\bexpected\b",
+            r"syntax error",
+            r"illegal start",
+            r"invalid syntax"
+        ],
+        "languages": {"c", "cpp", "java"}
+    },
+    {
+        "type": "NameError",
+        "patterns": [
+            r"undeclared",
+            r"cannot find symbol",
+            r"not declared"
+        ],
+        "languages": {"c", "cpp", "java"}
+    },
+    {
+        "type": "TypeError",
+        "patterns": [
+            r"incompatible types",
+            r"type mismatch"
+        ],
+        "languages": {"c", "cpp", "java"}
+    },
+    {
+        "type": "ImportError",
+        "patterns": [
+            r"no such file",
+            r"cannot open include",
+            r"package .* does not exist"
+        ],
+        "languages": {"c", "cpp", "java"}
+    },
+    {
+        "type": "FileStructureError",
+        "patterns": [
+            r"public class .* should be declared in a file named"
+        ],
+        "languages": {"java"}
+    }
+]
+
 def file_reader(file_path: str):
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -25,7 +76,6 @@ def file_reader(file_path: str):
             "error": str(e)
         }
 
-
 def infer_language(ext: str):
     if ext == ".py":
         return "python"
@@ -37,6 +87,18 @@ def infer_language(ext: str):
         return "java"
     raise ValueError("Unsupported language")
 
+def classify_from_stderr(stderr: str, language: str = None) -> str:
+    msg = stderr.lower()
+
+    for rule in ERROR_RULES:
+        if language and language not in rule["languages"]:
+            continue
+
+        for pattern in rule["patterns"]:
+            if re.search(pattern, msg):
+                return rule["type"]
+
+    return "CompileError"
 
 def compile_test(code: str, language: str):
     try:
@@ -59,6 +121,31 @@ def compile_test(code: str, language: str):
             "error": None
         }
 
+    except subprocess.TimeoutExpired:
+        return {
+            "stage": 0,
+            "status": "FAIL",
+            "check_type": "compile_only",
+            "language": language,
+            "executed": False,
+            "error_type": "TIMEOUT",
+            "error": f"Compilation exceeded {TIMEOUT_SEC} seconds"
+        }
+
+
+    except subprocess.CalledProcessError as e:
+        error_msg = e.stderr.strip()
+        error_type = classify_from_stderr(error_msg)
+        return {
+            "stage": 0,
+            "status": "FAIL",
+            "check_type": "compile_only",
+            "language": language,
+            "executed": False,
+            "error_type": error_type,
+            "error": error_msg
+        }
+
     except Exception as e:
         return {
             "stage": 0,
@@ -70,30 +157,31 @@ def compile_test(code: str, language: str):
             "error": str(e)
         }
 
-
 def run_compiler(file_path: str, language: str):
     if language == "c":
         subprocess.run(
             ["gcc", "-fsyntax-only", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
     elif language == "cpp":
         subprocess.run(
-            ["gcc", "-fsyntax-only", file_path],
+            ["g++", "-fsyntax-only", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
     elif language == "java":
         subprocess.run(
-            ["gcc", "-fsyntax-only", file_path],
+            ["javac", file_path],
             check=True,
             capture_output=True,
-            text=True
+            text=True,
+            timeout = TIMEOUT_SEC
         )
-
 
 def language_extension(language: str):
     return {
@@ -101,7 +189,6 @@ def language_extension(language: str):
         "cpp": ".cpp",
         "java": ".java"
     }[language]
-
 
 result_py = file_reader("Sample code 1.py")
 print(result_py)
@@ -114,4 +201,6 @@ print(result_cpp)
 
 result_java = file_reader("Sample Code 1.java")
 print(result_java)
+
+
 

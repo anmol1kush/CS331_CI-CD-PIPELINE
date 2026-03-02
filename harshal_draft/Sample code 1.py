@@ -1,8 +1,13 @@
-import math
+import os
 import numpy
 
-def test(a: list):
-print(10 + "A")
-    return a
+os.remove("test_delete.txt")
 
-test()
+while True:
+    pass
+
+def broken_function()
+    print("This will cause SyntaxError")
+
+print(10 + "A")
+

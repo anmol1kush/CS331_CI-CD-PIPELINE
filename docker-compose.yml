@@ -19,8 +19,9 @@ services:
       dockerfile: Dockerfile.api
     ports:
       - "3000:3000"
-    volumes:
-      - ./Backend/src:/usr/src/app
+    # For the container to use the dependencies installed at image build-time,
+    # do not bind-mount the host source directory here. Remove or uncomment
+    # the volume during active development if you need live code sync.
     env_file:
       - ./Backend/.env
     depends_on:
