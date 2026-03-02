@@ -1,28 +1,18 @@
+
 import express from "express";
 import axios from "axios";
-import { MongoClient } from "mongodb";
 
 const app = express();
 app.use(express.json());
 
 const SUPPORTED_EXTENSIONS = [".java", ".cpp", ".c", ".js"];
 
-<<<<<<< HEAD
-const MONGO_URL = process.env.MONGO_URL || "mongodb://mongo:27017";
-const MONGO_DB = process.env.MONGO_DB || "cs331";
 
-let dbClient;
-let webhooksCollection;
+let webhooksCollection = [];
 
-async function connectDb() {
-    dbClient = new MongoClient(MONGO_URL);
-    await dbClient.connect();
-    const db = dbClient.db(MONGO_DB);
-    webhooksCollection = db.collection("webhooks");
-    // Create an index for faster queries
-    await webhooksCollection.createIndex({ receivedAt: -1 });
-    console.log("Connected to MongoDB", MONGO_URL);
-}
+app.get("/", (req, res) => {
+    res.send("Server is running");
+});
 
 app.post("/github-webhook", async (req, res) => {
     const payload = req.body || {};
@@ -34,138 +24,80 @@ app.post("/github-webhook", async (req, res) => {
     console.log("New Commit:", commitId);
 
     try {
-        // Save received payload to MongoDB immediately
-        await webhooksCollection.insertOne({
+        const entry = {
             receivedAt: new Date(),
             repo,
             owner,
             commitId,
-            payload
-        });
+            payload,
+            processedFiles: []
+        };
 
-        // Attempt to fetch commit details for supported files (best-effort)
+        // Attempt to fetch commit details
         if (repo && owner && commitId) {
             const commitResponse = await axios(
                 `https://api.github.com/repos/${owner}/${repo}/commits/${commitId}`,
                 {
-                    headers: {
-                        Authorization: process.env.GITHUB_TOKEN ? `token ${process.env.GITHUB_TOKEN}` : undefined
-                    }
+                    headers: process.env.GITHUB_TOKEN
+                        ? { Authorization: `token ${process.env.GITHUB_TOKEN}` }
+                        : {}
                 }
             );
 
             const files = commitResponse.data.files || [];
+for (let file of files) {
+    const fileName = file.filename;
 
-            const processedFiles = [];
+    if (SUPPORTED_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
+        console.log("Supported file detected:", fileName);
 
-            for (let file of files) {
-                const fileName = file.filename;
-                if (SUPPORTED_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
-                    console.log("Supported file detected:", fileName);
-                    const fileResponse = await axios(file.raw_url, {
-                        headers: {
-                            Authorization: process.env.GITHUB_TOKEN ? `token ${process.env.GITHUB_TOKEN}` : undefined
-                        }
-                    });
-                    const sourceCode = fileResponse.data;
-                    processedFiles.push({ fileName, sourceCode });
-                }
-            }
+        try {
+            const fileResponse = await axios(file.raw_url, {
+                headers: process.env.GITHUB_TOKEN
+                    ? { Authorization: `token ${process.env.GITHUB_TOKEN}` }
+                    : {}
+            });
 
-            if (processedFiles.length > 0) {
-                // Update the previously inserted document with file details
-                await webhooksCollection.updateOne(
-                    { commitId },
-                    { $set: { processedFiles } }
-                );
-=======
-app.post("/github-webhook", async (req, res) => {
-    try {
-        const repo = req.body?.repository?.name;
-        const owner = req.body?.repository?.owner?.login;
-        const commitId = req.body?.after;
+            console.log("File Content:\n", fileResponse.data);
 
-        if (!repo || !owner || !commitId) {
-            return res.status(400).send("Invalid webhook payload");
+            entry.processedFiles.push({
+                fileName,
+                sourceCode: fileResponse.data
+            });
+        } catch (err) {
+            console.error(`Failed to fetch file ${fileName}:`, err.message);
+        }
+    }
+}
+           
+                
+            
         }
 
-        console.log("New Commit:", commitId);
-
-        // Ensure GitHub token exists
-        const token = process.env.GITHUB_TOKEN;
-        if (!token) {
-            console.error("GITHUB_TOKEN not set in environment variables");
-            return res.status(500).send("Server configuration error");
-        }
-
-        // Get commit details
-        const commitResponse = await axios.get(
-            `https://api.github.com/repos/${owner}/${repo}/commits/${commitId}`,
-            {
-                headers: {
-                    Authorization: `token ${token}`,
-                },
-            }
-        );
-
-        const files = commitResponse.data.files;
-
-        for (let file of files) {
-            const fileName = file.filename;
-
-            // Check if supported language
-            if (SUPPORTED_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
-                console.log("Supported file detected:", fileName);
-
-                // Fetch raw file content
-                const fileResponse = await axios.get(file.raw_url, {
-                    headers: {
-                        Authorization: `token ${token}`,
-                    },
-                });
-
-                const sourceCode = fileResponse.data;
-
-                console.log("----- SOURCE CODE -----");
-                console.log(sourceCode);
-
-                // 🔥 Send to AI engine here
-                // await generateTestCases(sourceCode, fileName);
->>>>>>> 79bab1b (Updated webhook backend)
-            }
-        }
+        // Save in memory
+        webhooksCollection.push(entry);
 
         res.status(200).send("Processed successfully");
     } catch (error) {
-<<<<<<< HEAD
-        console.error(error);
+        console.error(error.message);
         res.status(500).send("Error");
-=======
-        console.error("Error:", error.response?.data || error.message);
-        res.status(500).send("Error processing webhook");
->>>>>>> 79bab1b (Updated webhook backend)
     }
 });
 
-// Simple endpoint to retrieve recent webhook entries
-app.get("/webhooks", async (req, res) => {
-    try {
-        const limit = Math.min(100, parseInt(req.query.limit) || 20);
-        const entries = await webhooksCollection.find({}).sort({ receivedAt: -1 }).limit(limit).toArray();
-        res.json(entries);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error fetching webhooks");
-    }
+
+app.get("/webhooks", (req, res) => {
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
+
+    const sorted = [...webhooksCollection]
+        .sort((a, b) => b.receivedAt - a.receivedAt)
+        .slice(0, limit);
+
+    res.json(sorted);
 });
 
-connectDb()
-    .then(() => {
-        app.listen(3000, () => {
-            console.log("Server running on port 3000");
-        });
-    })
-    .catch((err) => {
-        console.error("Failed to connect to DB", err);
-        process.exit(1);
-    });
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
