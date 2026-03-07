@@ -6,8 +6,10 @@ import ast
 class Semantic_Engine:
 
     def __init__(self, stage0_result: dict, source_code: str):
-        assert stage0_result.get("status") == "PASS", \
-            "Stage 1 cannot run because Stage 0 did not PASS."
+        # assert stage0_result.get("status") == "PASS", \
+        #     "Stage 1 cannot run because Stage 0 did not PASS."
+        if stage0_result.get("status") != "PASS":
+            raise ValueError("Stage 1 cannot run because Stage 0 did not PASS.")
 
         self.stage0_result = stage0_result
         self.source_code = source_code
@@ -77,6 +79,54 @@ class Semantic_Engine:
                 "ast_error": str(e)
             }
 
+    def build_call_graph(self, tree):
+        defined_funcs = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                defined_funcs.add(node.name)
+
+        call_graph = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                calls = set()
+                for child in ast.walk(node):
+                    if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
+                        if child.func.id in defined_funcs:
+                            calls.add(child.func.id)
+                call_graph[node.name] = calls
+
+        return call_graph
+
+    def detect_recursion(self, call_graph):
+        visited = set()
+        in_stack = set()
+        cycles_found = []
+
+        def dfs(func, path):
+            visited.add(func)
+            in_stack.add(func)
+            path.append(func)
+
+            for callee in call_graph.get(func, []):
+                if callee in in_stack:
+                    cycle_start = path.index(callee)
+                    cycles_found.append(path[cycle_start:] + [callee])
+                elif callee not in visited:
+                    dfs(callee, path)
+
+            path.pop()
+            in_stack.remove(func)
+
+        for func in call_graph:
+            if func not in visited:
+                dfs(func, [])
+
+        return {
+            "direct_recursion": any(len(c) == 2 for c in cycles_found),
+            "mutual_recursion": any(len(c) > 2 for c in cycles_found),
+            "cycles": cycles_found
+        }
+
     def extract_structural_features(self):
         tree = self.context.get("ast_tree")
 
@@ -100,10 +150,10 @@ class Semantic_Engine:
             if isinstance(current_node, ast.FunctionDef):
                 functions += 1
 
-                for child in ast.walk(current_node):
-                    if isinstance(child, ast.Call):
-                        if isinstance(child.func, ast.Name) and child.func.id == current_node.name:
-                            recursion_detected = True
+                # for child in ast.walk(current_node):
+                #     if isinstance(child, ast.Call):
+                #         if isinstance(child.func, ast.Name) and child.func.id == current_node.name:
+                #             recursion_detected = True
 
             if isinstance(current_node, ast.ClassDef):
                 classes += 1
@@ -116,12 +166,18 @@ class Semantic_Engine:
 
         visit(tree)
 
+        call_graph = self.build_call_graph(tree)
+        recursion_info = self.detect_recursion(call_graph)
+
         features = {
             "function_count": functions,
             "class_count": classes,
             "loop_count": loops,
             "max_nesting_depth": max_depth,
             "recursion_detected": recursion_detected,
+            "direct_recursion": recursion_info["direct_recursion"],
+            "mutual_recursion": recursion_info["mutual_recursion"],
+            "recursion_cycles": recursion_info["cycles"],
 
             # Placeholders
             "exception_blocks": None,
@@ -138,118 +194,118 @@ class Semantic_Engine:
             "structural_features": features
         }
 
-    def apply_static_risk_heuristics(self):
-        features = self.context.get("structural_features")
-
-        if not features:
-            return {
-                "risk_signals": None,
-                "static_risk_score": 0,
-                "static_risk_level": "LOW"
-            }
-
-        function_count = features.get("function_count", 0)
-        loop_count = features.get("loop_count", 0)
-        max_depth = features.get("max_nesting_depth", 0)
-        recursion = features.get("recursion_detected", False)
-
-        risk_signals = {}
-        total_score = 0
-
-        if max_depth > 10:
-            severity = "HIGH"
-            score = 3
-            reason = f"Nesting depth = {max_depth} (>10)"
-        elif max_depth > 6:
-            severity = "MEDIUM"
-            score = 2
-            reason = f"Nesting depth = {max_depth} (>6)"
-        else:
-            severity = "LOW"
-            score = 0
-            reason = "Nesting depth within safe range"
-
-        if severity != "LOW":
-            total_score += score
-
-        risk_signals["complexity_risk"] = {
-            "flag": severity != "LOW",
-            "severity": severity,
-            "reason": reason
-        }
-
-        if recursion:
-            severity = "HIGH"
-            score = 3
-            reason = "Direct recursion detected"
-            total_score += score
-        else:
-            severity = "LOW"
-            score = 0
-            reason = "No recursion detected"
-
-        risk_signals["recursion_risk"] = {
-            "flag": recursion,
-            "severity": severity,
-            "reason": reason
-        }
-
-        if loop_count >= 3:
-            severity = "HIGH"
-            score = 3
-            reason = f"{loop_count} loops detected (>=3)"
-        elif loop_count >= 2:
-            severity = "MEDIUM"
-            score = 2
-            reason = f"{loop_count} loops detected (>=2)"
-        else:
-            severity = "LOW"
-            score = 0
-            reason = "Loop count within safe range"
-
-        if severity != "LOW":
-            total_score += score
-
-        risk_signals["performance_risk"] = {
-            "flag": severity != "LOW",
-            "severity": severity,
-            "reason": reason
-        }
-
-        if function_count >= 5:
-            severity = "MEDIUM"
-            score = 1
-            reason = f"{function_count} functions detected (>=5)"
-            total_score += score
-        else:
-            severity = "LOW"
-            score = 0
-            reason = "Function count within normal range"
-
-        risk_signals["structural_instability_risk"] = {
-            "flag": severity != "LOW",
-            "severity": severity,
-            "reason": reason
-        }
-
-        if total_score >= 7:
-            risk_level = "HIGH"
-        elif total_score >= 3:
-            risk_level = "MEDIUM"
-        else:
-            risk_level = "LOW"
-
-        return {
-            "risk_signals": risk_signals,
-            "static_risk_score": total_score,
-            "static_risk_level": risk_level
-        }
+    # def apply_static_risk_heuristics(self):
+    #     features = self.context.get("structural_features")
+    #
+    #     if not features:
+    #         return {
+    #             "risk_signals": None,
+    #             "static_risk_score": 0,
+    #             "static_risk_level": "LOW"
+    #         }
+    #
+    #     function_count = features.get("function_count", 0)
+    #     loop_count = features.get("loop_count", 0)
+    #     max_depth = features.get("max_nesting_depth", 0)
+    #     recursion = features.get("recursion_detected", False)
+    #
+    #     risk_signals = {}
+    #     total_score = 0
+    #
+    #     if max_depth > 10:
+    #         severity = "HIGH"
+    #         score = 3
+    #         reason = f"Nesting depth = {max_depth} (>10)"
+    #     elif max_depth > 6:
+    #         severity = "MEDIUM"
+    #         score = 2
+    #         reason = f"Nesting depth = {max_depth} (>6)"
+    #     else:
+    #         severity = "LOW"
+    #         score = 0
+    #         reason = "Nesting depth within safe range"
+    #
+    #     if severity != "LOW":
+    #         total_score += score
+    #
+    #     risk_signals["complexity_risk"] = {
+    #         "flag": severity != "LOW",
+    #         "severity": severity,
+    #         "reason": reason
+    #     }
+    #
+    #     if recursion:
+    #         severity = "HIGH"
+    #         score = 3
+    #         reason = "Direct recursion detected"
+    #         total_score += score
+    #     else:
+    #         severity = "LOW"
+    #         score = 0
+    #         reason = "No recursion detected"
+    #
+    #     risk_signals["recursion_risk"] = {
+    #         "flag": recursion,
+    #         "severity": severity,
+    #         "reason": reason
+    #     }
+    #
+    #     if loop_count >= 3:
+    #         severity = "HIGH"
+    #         score = 3
+    #         reason = f"{loop_count} loops detected (>=3)"
+    #     elif loop_count >= 2:
+    #         severity = "MEDIUM"
+    #         score = 2
+    #         reason = f"{loop_count} loops detected (>=2)"
+    #     else:
+    #         severity = "LOW"
+    #         score = 0
+    #         reason = "Loop count within safe range"
+    #
+    #     if severity != "LOW":
+    #         total_score += score
+    #
+    #     risk_signals["performance_risk"] = {
+    #         "flag": severity != "LOW",
+    #         "severity": severity,
+    #         "reason": reason
+    #     }
+    #
+    #     if function_count >= 5:
+    #         severity = "MEDIUM"
+    #         score = 1
+    #         reason = f"{function_count} functions detected (>=5)"
+    #         total_score += score
+    #     else:
+    #         severity = "LOW"
+    #         score = 0
+    #         reason = "Function count within normal range"
+    #
+    #     risk_signals["structural_instability_risk"] = {
+    #         "flag": severity != "LOW",
+    #         "severity": severity,
+    #         "reason": reason
+    #     }
+    #
+    #     if total_score >= 7:
+    #         risk_level = "HIGH"
+    #     elif total_score >= 3:
+    #         risk_level = "MEDIUM"
+    #     else:
+    #         risk_level = "LOW"
+    #
+    #     return {
+    #         "risk_signals": risk_signals,
+    #         "static_risk_score": total_score,
+    #         "static_risk_level": risk_level
+    #     }
 
     def run(self):
         init_output = self.initialize()
         ast_output = self.parse_ast()
         feature_output = self.extract_structural_features()
-        risk_output = self.apply_static_risk_heuristics()
+        #risk_output = self.apply_static_risk_heuristics()
 
         return {
             "stage": 1,
@@ -257,6 +313,6 @@ class Semantic_Engine:
             "language": self.language,
             **init_output,
             **ast_output,
-            **feature_output,
-            **risk_output
+            **feature_output
+            # **risk_output
         }
