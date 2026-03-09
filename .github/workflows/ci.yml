@@ -27,7 +27,7 @@ jobs:
 
       - name: Run Python App Test
         run: |
-          python app.py
+          python /home/mohit-kumawat/Desktop/projects/CS331_CI-CD-PIPELINE/Intelligence-Module/Orchestrator.py
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

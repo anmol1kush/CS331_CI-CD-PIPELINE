@@ -49,7 +49,7 @@ class Pipeline_Orchestrator:
 
 
 
-file_path = r".\Stage1\Test\LC Test.py"
+file_path = r"/home/mohit-kumawat/Desktop/projects/CS331_CI-CD-PIPELINE/Intelligence-Module/Stage1/Tests/LC Test.py"
 #file_path = r"C:\Users\hp\Desktop\Leet Code\Optimised and Learnings\4 - Median of Two Sorted arrays_alt sol.py"
 #file_path = r"C:\Users\hp\Desktop\IIIT Guwahati\CS\CS 201 (Algorithm)\Mid Sem Algo\Q2.cpp"
 pipeline = Pipeline_Orchestrator(file_path)
