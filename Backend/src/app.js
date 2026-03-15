@@ -2,6 +2,8 @@
 import express from "express";
 import axios from "axios";
 import connectDB from "./config/mongodb.js";
+
+
 const app = express();
 app.use(express.json());
 connectDB();
