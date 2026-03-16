@@ -75,6 +75,7 @@ def detect_bugs(results, tests):
                 continue
 
             actual = result.get("output")
+            mode = test.get("comparison_mode", "exact")
 
             if not compare_outputs(actual, expected):
                 incorrect_outputs.append({
@@ -82,7 +83,8 @@ def detect_bugs(results, tests):
                     "input": test.get("input"),
                     "expected": expected,
                     "actual": actual,
-                    "strategy": test.get("strategy")
+                    "strategy": test.get("strategy"),
+                    "comparison_mode": mode
                 })
 
     return {
