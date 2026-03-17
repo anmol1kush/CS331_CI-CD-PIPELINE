@@ -30,7 +30,7 @@ jobs:
 
       - name: Run AI Test Generator
         run: |
-          python app.py
+          python python/app.py
 
       - name: Setup Node
         uses: actions/setup-node@v4
