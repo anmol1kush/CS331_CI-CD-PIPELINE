@@ -22,9 +22,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: "3.9"
 
-      - name: Install Dependencies
+      - name: Install Python Dependencies
         run: |
           pip install -r requirements.txt
 
@@ -35,13 +35,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install Backend Dependencies
         run: |
-          cd Backend/src
+          cd Backend
           npm install
 
       - name: Start Backend
         run: |
-          node Backend/src/app.js
+          cd Backend
+          npm start
