@@ -1,0 +1,65 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - api
+      - db
+
+  api:
+    build:
+      context: ./Backend/src
+      dockerfile: Dockerfile.api
+    ports:
+      - "3000:3000"
+    # For the container to use the dependencies installed at image build-time,
+    # do not bind-mount the host source directory here. Remove or uncomment
+    # the volume during active development if you need live code sync.
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      - db
+      - mongo
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - .:/worker
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: cicd
+      POSTGRES_PASSWORD: cicdpass
+      POSTGRES_DB: cicddb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  db_data:
+  mongo_data:
+
+networks:
+  default:
+    driver: bridge

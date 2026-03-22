@@ -1,9 +1,15 @@
-
+import cors from "cors"
 import express from "express";
 import axios from "axios";
+import { triggerPipeline } from "./triggerPipeline.js";
+
+
+
 
 const app = express();
+app.use(cors())
 app.use(express.json());
+// connectDB();
 
 const SUPPORTED_EXTENSIONS = [".java", ".cpp", ".c", ".js"];
 
@@ -97,6 +103,86 @@ app.get("/webhooks", (req, res) => {
 
 
 const PORT = process.env.PORT || 3000;
+
+app.post("/run-pipeline", async (req, res) => {
+
+    try {
+
+        const status = await triggerPipeline();
+
+        if (status === 204) {
+            res.json({ message: "Pipeline triggered successfully" });
+        } else {
+            res.json({ message: "Pipeline trigger failed", status });
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Pipeline trigger failed" });
+    }
+
+});
+
+
+// app.get("/pipeline-status", async (req, res) => {
+//     try {
+
+//         const url = `https://api.github.com/repos/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}/actions/runs`;
+
+//         const response = await axios.get(url, {
+//             headers: {
+//                 Authorization: `token ${process.env.GITHUB_TOKEN}`,
+//                 Accept: "application/vnd.github+json"
+//             }
+//         });
+
+//         const latest = response.data.workflow_runs[0];
+
+//         res.json({
+//             status: latest.status,
+//             conclusion: latest.conclusion,
+//             id: latest.id
+//         });
+
+//     } catch (err) {
+//         res.status(500).json({ error: "Failed to fetch pipeline status" });
+//     }
+// });
+app.get("/pipeline-status", async (req, res) => {
+    try {
+
+        console.log("Pipeline status API called");
+
+        const url = `https://api.github.com/repos/${process.env.GITHUB_REPO_OWNER}/${process.env.GITHUB_REPO_NAME}/actions/runs`;
+
+        console.log("Calling GitHub API:", url);
+
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `token ${process.env.GITHUB_TOKEN}`,
+                Accept: "application/vnd.github+json"
+            }
+        });
+
+        console.log("GitHub response received");
+
+        const latest = response.data.workflow_runs[0];
+
+        console.log("Latest workflow:", latest);
+
+        res.json({
+            status: latest?.status,
+            conclusion: latest?.conclusion
+        });
+
+    } catch (err) {
+
+        console.error("Pipeline API ERROR:");
+        console.error(err.response?.data || err.message);
+
+        res.status(500).json({ error: "Failed to fetch pipeline status" });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

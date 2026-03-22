@@ -15,7 +15,7 @@
 - Frontend (Flask Web UI)
 - Backend API (Node.js)
 - AI Test Generator (Python – single AI container)
-- Database (PostgreSQL)
+- Database (MongoDB)
 
 ---
 
