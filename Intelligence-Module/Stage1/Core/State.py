@@ -9,14 +9,12 @@ class State:
         self,
         language: str,
         execution_model: str,
-        structural_features: Dict[str, Any],
-        source_code: str = ""
+        structural_features: Dict[str, Any]
     ):
 
         # pipeline context
         self.language = language
         self.execution_model = execution_model
-        self.source_code = source_code
 
         # static str features
         self.structural_features = structural_features
@@ -44,13 +42,11 @@ class State:
         language = semantic_output.get("language")
         execution_model = semantic_output.get("execution_model")
         structural_features = semantic_output.get("structural_features", {})
-        source_code = semantic_output.get("normalized_code","")
 
         return cls(
             language=language,
             execution_model=execution_model,
-            structural_features=structural_features,
-            source_code = source_code
+            structural_features=structural_features
         )
 
     def add_generated_tests(self, tests: List[Any], strategy: str):
@@ -91,7 +87,6 @@ class State:
         return {
             "language": self.language,
             "execution_model": self.execution_model,
-            "source_code": self.source_code,
             "structural_features": self.structural_features,
             "generated_tests": self.generated_tests,
             "executed_tests": self.executed_tests,

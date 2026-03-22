@@ -33,8 +33,6 @@ class Semantic_Engine:
 
         code = self.context["normalized_code"]
 
-        self.context["metadata"]["line_count"] = len(code.splitlines()) if code else 0
-
         if self.language == "python":
             if "class Solution" in code:
                 model = "callable_method"
@@ -142,11 +140,10 @@ class Semantic_Engine:
         classes = 0
         loops = 0
         max_depth = 0
-        branches = 0
         recursion_detected = False
 
         def visit(current_node, depth=0):
-            nonlocal functions, classes, loops, max_depth,branches, recursion_detected
+            nonlocal functions, classes, loops, max_depth, recursion_detected
 
             max_depth = max(max_depth, depth)
 
@@ -163,9 +160,6 @@ class Semantic_Engine:
 
             if isinstance(current_node, (ast.For, ast.While)):
                 loops += 1
-
-            if isinstance(current_node, (ast.If, ast.IfExp, ast.ExceptHandler)):
-                branches += 1
 
             for child in ast.iter_child_nodes(current_node):
                 visit(child, depth + 1)
@@ -184,13 +178,12 @@ class Semantic_Engine:
             "direct_recursion": recursion_info["direct_recursion"],
             "mutual_recursion": recursion_info["mutual_recursion"],
             "recursion_cycles": recursion_info["cycles"],
-            "line_count": self.context["metadata"].get("line_count", 0),
-            "branching_factor": branches,
 
             # Placeholders
             "exception_blocks": None,
             "global_variable_usage": None,
             "comprehension_count": None,
+            "branching_factor": None,
             "cyclomatic_complexity": None
         }
 
@@ -318,7 +311,6 @@ class Semantic_Engine:
             "stage": 1,
             "status": "STAGE1_COMPLETE",
             "language": self.language,
-            "normalized_code": self.context["normalized_code"],
             **init_output,
             **ast_output,
             **feature_output

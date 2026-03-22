@@ -1,20 +1,12 @@
 """
 Action definitions for the Stage-1.
 """
-
-"""
--> STRESS = "stress"
--> CONSTRAINT = "constraint"
-
-the abv to be kept at hold as we req confirmation on the ip type to Intelligent Module
-(Source Code only
-or Source + Constraint File)
-"""
 from enum import Enum
 from typing import Optional
 
 class Action_Type(Enum):
     GENERATE_TESTS = "generate_tests"
+    RUN_TEST_SUITE = "run_test_suite"
     STOP = "stop"
 
 class Test_Strategy(Enum):
