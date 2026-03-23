@@ -9,12 +9,13 @@ class Base_LLM_Provider(ABC):
     """
 
     @abstractmethod
-    def generate(self, prompt: str) -> Dict:
+    def generate(self, prompt: str) -> str:
         """
-            Accepts a fully formatted prompt string.
+        Accepts a fully formatted prompt string.
 
-            Must:
-            -> Return the raw response string from the LLM
-            -> Raise an exception if generation fails
-            """
+        Must:
+        - Return the raw response string from the LLM
+        - Raise an exception if generation fails
+        - JSON parsing is handled by the caller (llm_test_generator)
+        """
         pass
