@@ -13,14 +13,12 @@ from Stage1.Core.Actions import Action_Type
 from Stage1.Tools.test_executor import run_tests
 from Stage1.Tools.coverage_analyzer import compute_coverage
 from Stage1.Tools.bug_detector import detect_bugs
+from Stage1.Tools.llm_test_generator import LLM_Test_Generator
 
 
 def apply_action(state, action):
     if action.action_type == Action_Type.GENERATE_TESTS:
         generate_tests(state, action.strategy)
-
-    elif action.action_type == Action_Type.RUN_TEST_SUITE:
-        run_test_suite(state)
 
     elif action.action_type == Action_Type.STOP:
         stop_agent(state)
@@ -30,19 +28,27 @@ def apply_action(state, action):
     return state
 
 
-def generate_tests(state, strategy):
-    tests = []
+llm_generator = LLM_Test_Generator()
 
-    if strategy:
-        for i in range(3):
-            tests.append(
-                {
-                    "strategy": strategy.value,
-                    "input": None
-                }
-            )
+def generate_tests(state, strategy):
+    try:
+        tests = llm_generator.generate_tests(
+            source_code=state.source_code,
+            execution_model=state.execution_model,
+            structural_features=state.structural_features,
+            strategy=strategy.value,
+            existing_tests=state.executed_tests if state.executed_tests else None,
+            previous_failures=state.exceptions if state.exceptions else None
+        )
+    except (ValueError, RuntimeError) as e:
+        print(f"  [Transition] LLM error: {e} — skipping this iteration")
+        return
+
+    if not tests:
+        return
 
     state.add_generated_tests(tests, strategy.value if strategy else "unknown")
+    run_test_suite(state)
 
 
 def run_test_suite(state):
@@ -58,16 +64,16 @@ def run_test_suite(state):
     if not pending_tests:
         return
 
-    results = run_tests(pending_tests)
-
-    coverage = compute_coverage(results)
+    results, executed_lines = run_tests(state.source_code, pending_tests, state.execution_model)
+    state.all_executed_lines.update(executed_lines)
+    coverage = compute_coverage(state.source_code, state.all_executed_lines)
 
     state.update_coverage(
         coverage.get("line_coverage", 0),
         coverage.get("branch_coverage", 0)
     )
 
-    bugs = detect_bugs(results)
+    bugs = detect_bugs(results, pending_tests)
 
     state.record_exceptions(bugs.get("exceptions", []))
     state.record_failures(bugs.get("failures", []))
