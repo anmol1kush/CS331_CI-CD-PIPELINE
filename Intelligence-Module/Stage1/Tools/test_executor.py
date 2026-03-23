@@ -1,5 +1,5 @@
 """
-Test Executor
+Tests Executor
 
 Runs generated tests against the program under test and
 returns structured execution results with line-level trace data.
@@ -19,7 +19,8 @@ import time
 import multiprocessing
 import sys
 import io
-import trace
+import os
+import tempfile
 from Stage1.config import TEST_TIMEOUT, QUEUE_DRAIN_TIMEOUT
 
 
@@ -87,9 +88,30 @@ def extract_traced_lines(tracer):
 
 
 def callable_worker(source_code, test, queue):
+    tmp_path = None
     try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as tmp:
+            tmp.write(source_code)
+            tmp_path = tmp.name
+
+        code = compile(open(tmp_path).read(), tmp_path, 'exec')
+
+        executed_lines = set()
+
+        def line_tracer(frame, event, arg):
+            if event == 'line' and frame.f_code.co_filename == tmp_path:
+                executed_lines.add(frame.f_lineno)
+            return line_tracer
+
+        def global_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                return line_tracer
+            return None
+
         namespace = {}
-        exec(source_code, namespace)
+        sys.settrace(global_tracer)
+        exec(code, namespace)
+        sys.settrace(None)
 
         if "Solution" not in namespace:
             raise RuntimeError("Solution class not found")
@@ -98,24 +120,22 @@ def callable_worker(source_code, test, queue):
 
         method_name = test.get("method_name")
         if not method_name:
-            raise RuntimeError("Test missing method_name field")
+            raise RuntimeError("Tests missing method_name field")
 
         method = getattr(solution, method_name, None)
         if not method:
             raise RuntimeError(f"Method '{method_name}' not found in Solution class")
 
         inputs = test.get("input", [])
-
-        tracer = trace.Trace(count=True, trace=False)
-        output = tracer.runfunc(method, *inputs)
-
-        executed_lines = extract_traced_lines(tracer)
+        sys.settrace(global_tracer)
+        output = method(*inputs)
+        sys.settrace(None)
 
         queue.put({
             "status": "success",
             "output": output,
             "error": None,
-            "executed_lines": executed_lines
+            "executed_lines": list(executed_lines)
         })
 
     except Exception as e:
@@ -123,8 +143,12 @@ def callable_worker(source_code, test, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": set()
+            "executed_lines": []
         })
+
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def execute_callable(source_code, tests):
@@ -137,7 +161,7 @@ def execute_callable(source_code, tests):
             (source_code, test)
         )
 
-        all_executed_lines.update(result.pop("executed_lines", set()))
+        all_executed_lines.update(result.pop("executed_lines", []))
         result["test_id"] = ind
         results.append(result)
 
@@ -145,21 +169,40 @@ def execute_callable(source_code, tests):
 
 
 def stdin_worker(source_code, fake_input, queue):
+    tmp_path = None
     sys.stdin = io.StringIO(fake_input)
     sys.stdout = io.StringIO()
 
     try:
-        tracer = trace.Trace(count=True, trace=False)
-        tracer.run(f'exec({repr(source_code)}, {{}})')
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as tmp:
+            tmp.write(source_code)
+            tmp_path = tmp.name
+
+        code = compile(open(tmp_path).read(), tmp_path, 'exec')
+
+        executed_lines = set()
+
+        def line_tracer(frame, event, arg):
+            if event == 'line' and frame.f_code.co_filename == tmp_path:
+                executed_lines.add(frame.f_lineno)
+            return line_tracer
+
+        def global_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                return line_tracer
+            return None
+
+        sys.settrace(global_tracer)
+        exec(code, {})
+        sys.settrace(None)
 
         output = sys.stdout.getvalue()
-        executed_lines = extract_traced_lines(tracer)
 
         queue.put({
             "status": "success",
             "output": output,
             "error": None,
-            "executed_lines": executed_lines
+            "executed_lines": list(executed_lines)
         })
 
     except Exception as e:
@@ -167,13 +210,12 @@ def stdin_worker(source_code, fake_input, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": set()
+            "executed_lines": []
         })
 
-    # To be used as at method to threading
-    # finally:
-    #     sys.stdin = old_stdin
-    #     sys.stdout = old_stdout
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def execute_stdin(source_code, tests):
@@ -188,7 +230,7 @@ def execute_stdin(source_code, tests):
             (source_code, fake_input)
         )
 
-        all_executed_lines.update(result.pop("executed_lines", set()))
+        all_executed_lines.update(result.pop("executed_lines", []))
         result["test_id"] = ind
         results.append(result)
 
@@ -196,17 +238,35 @@ def execute_stdin(source_code, tests):
 
 
 def script_worker(source_code, queue):
+    tmp_path = None
     try:
-        tracer = trace.Trace(count=True, trace=False)
-        tracer.run(f'exec({repr(source_code)}, {{}})')
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as tmp:
+            tmp.write(source_code)
+            tmp_path = tmp.name
 
-        executed_lines = extract_traced_lines(tracer)
+        code = compile(open(tmp_path).read(), tmp_path, 'exec')
+
+        executed_lines = set()
+
+        def line_tracer(frame, event, arg):
+            if event == 'line' and frame.f_code.co_filename == tmp_path:
+                executed_lines.add(frame.f_lineno)
+            return line_tracer
+
+        def global_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                return line_tracer
+            return None
+
+        sys.settrace(global_tracer)
+        exec(code, {})
+        sys.settrace(None)
 
         queue.put({
             "status": "success",
             "output": None,
             "error": None,
-            "executed_lines": executed_lines
+            "executed_lines": list(executed_lines)
         })
 
     except Exception as e:
@@ -214,8 +274,12 @@ def script_worker(source_code, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": set()
+            "executed_lines": []
         })
+
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 def execute_script(source_code):
@@ -224,7 +288,7 @@ def execute_script(source_code):
         (source_code,)
     )
 
-    all_executed_lines = result.pop("executed_lines", set())
+    all_executed_lines = result.pop("executed_lines", [])
     result["test_id"] = 0
 
     return [result], all_executed_lines
