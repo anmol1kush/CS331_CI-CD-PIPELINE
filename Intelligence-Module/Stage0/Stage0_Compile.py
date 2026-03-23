@@ -260,7 +260,7 @@ def language_extension(language: str):
 # result_java = file_reader("Sample Code 1.java")
 # print(result_java)
 #
-# res_test_code = file_reader("Test Code 1.py")
+# res_test_code = file_reader("Tests Code 1.py")
 # print(res_test_code)
 
 # base_dir = os.path.dirname(os.path.abspath(__file__))
