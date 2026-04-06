@@ -7,7 +7,7 @@ hardcoded magic numbers across the codebase.
 """
 
 
-# Test Executor:-
+# Tests Executor:-
 # Timeout for user code execution (seconds)
 # How long a child process gets to run user-submitted code
 TEST_TIMEOUT = 10
@@ -36,11 +36,20 @@ LLM_RETRY_DELAY = 2
 # GEMINI_MAX_OUTPUT_TOKENS = 1000
 
 
-# LLM Test Generator
+# LLM Tests Generator
 # Maximum number of test cases per LLM call
-MAX_TESTS_PER_CALL = 5
+MAX_TESTS_PER_CALL = 3
 
 
 # Agent Loop (Environment)
 # Maximum iterations for the agent loop
-MAX_ITERATIONS = 20
+MAX_ITERATIONS = 10
+
+# Agent:-
+# Temperature decay exponent
+# 1 = linear, 2 = squared, 3 = cubed, 4 = quartic
+# Higher = shifts to exploitation faster
+TEMPERATURE_EXPONENT = 1.5
+
+# Number of stagnant iterations before forced random pick
+STAGNATION_THRESHOLD = 3

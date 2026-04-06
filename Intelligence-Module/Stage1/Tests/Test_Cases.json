@@ -1,0 +1,360 @@
+{
+  "generated_test_cases": [
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        -1
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        2
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        0
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        3
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        6
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1162261467
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        295245
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        100
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        9
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        4
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        774840978
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        205891132094649
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1694577218886
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1162261468
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        118098
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1350851717672992089
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1073741824
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        3486784401
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        71744535
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        59048
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        54
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        9223372036854775807
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "edge_case",
+      "method_name": "isPowerOfThree",
+      "input": [
+        24
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        3486784402
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        3221225472
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        100442349
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        4052555153018976267
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        3486784403
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        4236443047215
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        1853020188851841
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        9223372036854775783
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        59580441
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        27
+      ],
+      "expected_output": true,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        18
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "branch",
+      "method_name": "isPowerOfThree",
+      "input": [
+        5
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        2701703435345984178
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        4052555153018976268
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    },
+    {
+      "strategy": "adversarial",
+      "method_name": "isPowerOfThree",
+      "input": [
+        -9223372036854775808
+      ],
+      "expected_output": false,
+      "comparison_mode": "exact"
+    }
+  ],
+  "bugs": {
+    "exceptions": [],
+    "failures": [],
+    "incorrect_outputs": []
+  }
+}

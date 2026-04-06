@@ -1,3 +1,14 @@
 # Web UI
 Flask
+Flask-Login
+Flask-WTF
+Flask-SQLAlchemy
+WTForms
+bcrypt
+requests
+pymongo
 docker
+
+# Intelligence Module Dependencies
+google-generativeai
+python-dotenv

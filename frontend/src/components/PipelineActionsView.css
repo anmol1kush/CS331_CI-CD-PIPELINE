@@ -1,0 +1,215 @@
+/* GitHub Actions–inspired panel (dark) */
+.pa-root {
+  --pa-bg: #0d1117;
+  --pa-border: #30363d;
+  --pa-text: #e6edf3;
+  --pa-muted: #8b949e;
+  --pa-success: #3fb950;
+  --pa-failure: #f85149;
+  --pa-pending: #d29922;
+  --pa-link: #58a6ff;
+
+  background: var(--pa-bg);
+  color: var(--pa-text);
+  border: 1px solid var(--pa-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.pa-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--pa-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pa-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.pa-meta {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--pa-muted);
+}
+
+.pa-run-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 2em;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 1px solid var(--pa-border);
+  white-space: nowrap;
+}
+
+.pa-run-badge--queued,
+.pa-run-badge--waiting {
+  color: var(--pa-muted);
+}
+
+.pa-run-badge--in_progress {
+  color: var(--pa-pending);
+  border-color: var(--pa-pending);
+}
+
+.pa-run-badge--completed.pa-conclusion--success {
+  color: var(--pa-success);
+  border-color: var(--pa-success);
+}
+
+.pa-run-badge--completed.pa-conclusion--failure {
+  color: var(--pa-failure);
+  border-color: var(--pa-failure);
+}
+
+.pa-run-badge--completed.pa-conclusion--cancelled {
+  color: var(--pa-muted);
+}
+
+.pa-run-badge--completed.pa-conclusion--neutral,
+.pa-run-badge--completed.pa-conclusion--skipped,
+.pa-run-badge--completed.pa-conclusion--null {
+  color: var(--pa-muted);
+}
+
+.pa-jobs-head {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pa-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--pa-border);
+}
+
+.pa-job-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--pa-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.pa-job-row:last-child {
+  border-bottom: none;
+}
+
+.pa-job-row:hover {
+  background: #161b22;
+}
+
+.pa-job-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pa-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--pa-border);
+  border-top-color: var(--pa-pending);
+  border-radius: 50%;
+  animation: pa-spin 0.8s linear infinite;
+}
+
+@keyframes pa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pa-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pa-muted);
+}
+
+.pa-dot--running {
+  background: var(--pa-pending);
+  box-shadow: 0 0 0 2px rgba(210, 153, 34, 0.35);
+  animation: pa-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pa-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.pa-check {
+  color: var(--pa-success);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.pa-x {
+  color: var(--pa-failure);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.pa-job-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.pa-job-state {
+  font-size: 12px;
+  color: var(--pa-muted);
+  text-transform: capitalize;
+}
+
+.pa-empty,
+.pa-offline {
+  padding: 24px 16px;
+  color: var(--pa-muted);
+  text-align: center;
+}
+
+.pa-follow-up {
+  padding: 16px;
+  border-top: 1px solid var(--pa-border);
+  background: #161b22;
+}
+
+.pa-follow-up a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pa-link);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pa-follow-up a:hover {
+  text-decoration: underline;
+}
+
+.pa-external {
+  font-size: 12px;
+  color: var(--pa-muted);
+  margin-top: 8px;
+}
+
+.pa-external a {
+  color: var(--pa-link);
+}

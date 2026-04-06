@@ -29,22 +29,6 @@ jobs:
 
       - name: Run AI Test Generator
         run: python python/app.py
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Backend Dependencies
-        run: |
-          cd Backend
-          npm install
-
-      - name: Start Backend
-        run: |
-          cd Backend
-          node src/app.js &
-          sleep 10
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_REPO_OWNER: ${{ secrets.REPO_OWNER }}

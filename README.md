@@ -36,13 +36,21 @@ source cicd/bin/activate
 pip install -r requirements.txt
 ```
 
+- **Set up environment variables (for AI features):**
+
+```bash
+# Copy the .env file from Intelligence-Module or create your own
+cp Intelligence-Module/.env .env
+# Edit .env to add your GEMINI_API_KEY if needed
+```
+
 - **Run the Flask web UI (recommended):**
 
 ```bash
 python3 webapp.py
 ```
 
-Open http://localhost:5000 in your browser. The UI allows uploading a file or choosing an existing sample from `samples/` and shows the output returned by `process_submission()`.
+Open http://localhost:5000 in your browser. You'll be redirected to login. Sign up first, then sign in to access the dashboard and test runner.
 
 - **Run the CLI runner (prints to terminal):**
 
@@ -63,13 +71,111 @@ Files uploaded via the web UI are stored in an `uploads/` folder created automat
 
 ---
 
-## 🔄 System Flow (concise)
+## Authentication
 
-1. Developer pushes code → Git sends webhook to backend
-2. Backend extracts changed files and metadata
-3. AI generates unit/API test cases for changed code
-4. CI/CD (e.g., GitHub Actions) runs generated tests
-5. Results, logs and coverage are stored and surfaced on the dashboard
+The web UI now requires authentication. Users can sign up as Admin or Developer. Credentials are stored in the PostgreSQL database (or SQLite for local testing).
+
+- **Sign Up:** Create an account with employee ID, name, position (admin/developer), and password.
+- **Sign In:** Log in with employee ID and password.
+- **Dashboard:** Access the main dashboard with links to test runner, webhooks, reports, and settings.
+
+## AI Test Generation
+
+The Intelligence Module provides advanced AI-powered testing capabilities using Google's Gemini API:
+
+### Features:
+- **Multi-Language Support**: Python, C, C++, and Java files
+- **Two-Stage Analysis**:
+  - **Stage 0**: Compilation/syntax checking
+  - **Stage 1**: AI-powered semantic analysis and test generation
+- **AI Analysis**: Structural feature extraction and code understanding
+- **Intelligent Test Generation**: Uses hybrid search algorithms combining random search, simulated annealing, and hill climbing
+- **Bug Detection**: Identifies exceptions, failures, and incorrect outputs
+- **Coverage Analysis**: Line and branch coverage metrics
+- **Results Display**: Shows generated test cases and bug analysis from JSON output files
+
+### How to Use:
+1. Access Test Runner from the dashboard after logging in
+2. Upload a code file or select from samples
+3. The system will perform AI analysis and display comprehensive results
+4. View generated test cases, bug analysis, and execution results
+
+### Test Strategies:
+- **Edge Cases**: Boundary value testing
+- **Branch Coverage**: Decision point testing
+- **Adversarial**: Stress testing with unexpected inputs
+- **Constraint-Based**: Logic constraint testing
+
+## 📦 Dependencies
+
+### Python Packages
+- **Flask**: Web framework
+- **Flask-Login**: User session management
+- **Flask-WTF**: Form handling
+- **Flask-SQLAlchemy**: Database ORM
+- **WTForms**: Form validation
+- **bcrypt**: Password hashing
+- **pymongo**: MongoDB driver
+- **requests**: HTTP client
+- **google-generativeai**: Gemini AI API
+- **python-dotenv**: Environment variable management
+- **docker**: Docker API client
+
+### External Services
+- **MongoDB**: For storing webhook data and AI test results
+- **PostgreSQL**: For user authentication (optional, SQLite for local dev)
+- **Google Gemini API**: For AI-powered test generation
+
+### Environment Variables
+Create a `.env` file in the project root:
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Copy from `Intelligence-Module/.env` or set your own API key.
+
+## 🧪 Testing the Setup
+
+### 1. Local Testing (SQLite):
+```bash
+source cicd/bin/activate
+python webapp.py
+```
+Open http://localhost:5000, sign up, then log in to access the dashboard.
+
+### 2. Docker Testing (PostgreSQL):
+```bash
+docker compose up --build
+```
+Access http://localhost:5000 for the web UI.
+
+### 3. Testing AI Features:
+- Ensure MongoDB is running locally (`mongod`)
+- Set `GEMINI_API_KEY` in `.env` file
+- Upload a code file through the AI Tests section
+- The system will perform compilation check (Stage 0) followed by AI analysis (Stage 1)
+
+### 4. CLI Testing:
+```bash
+python Intelligence-Module/Orchestrator.py
+```
+This runs the full AI pipeline on sample test files.
+
+## Current Features
+
+- ✅ User authentication with secure password hashing
+- ✅ Role-based access (Admin/Developer)
+- ✅ Improved dashboard UI with cards and navigation
+- ✅ Code compilation testing for C/C++/Java/Python
+- ✅ **AI-powered test case generation integrated into Test Runner**
+- ✅ **Hybrid search algorithms for intelligent testing**
+- ✅ **Multi-stage analysis (compilation + semantic)**
+- ✅ **Bug detection and coverage analysis**
+- ✅ **Results display from JSON output files**
+- ✅ File upload and sample testing
+- ✅ Webhook integration with MongoDB storage
+- ✅ Docker containerization for all services
+- ✅ Fixed authentication bugs (UserMixin inheritance)
 
 ---
 

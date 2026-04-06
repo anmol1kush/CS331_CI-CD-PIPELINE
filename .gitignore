@@ -1,7 +1,11 @@
 Backend/.env
-
+.env
+Intelligence-Module/.env
+.example
 node_modules/
 __pycache__/
 .history
 Frontend/.vite/
 dist/
+".env" 
+.env

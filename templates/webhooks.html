@@ -3,14 +3,26 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Recent Webhooks</title>
+    <title>Recent Webhooks - CI/CD</title>
     <link rel="stylesheet" href="/static/css/styles.css">
   </head>
   <body>
-    <h1>Recent GitHub Webhooks</h1>
-    <a href="/">◀ Back</a>
-    <button id="refresh">Refresh</button>
-    <div id="entries">
+    <header class="dashboard-header">
+      <h1>Recent GitHub Webhooks</h1>
+      <div class="user-info">
+        <span>Welcome, {{ current_user.name }} ({{ current_user.position }})</span>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </header>
+    <nav class="dashboard-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="{{ url_for('index') }}">AI Test Runner</a>
+      <a href="{{ url_for('show_webhooks') }}">Webhooks</a>
+    </nav>
+    <main class="dashboard-main">
+      <div class="webhooks-container">
+        <button id="refresh" class="btn-primary" style="margin-bottom: 20px;">🔄 Refresh</button>
+        <div id="entries">
       {% if entries and entries|length > 0 %}
         <ul class="webhook-list">
         {% for e in entries %}

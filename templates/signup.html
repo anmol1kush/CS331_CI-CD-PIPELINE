@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Signup - CI/CD Dashboard</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+  </head>
+  <body>
+    <div class="login-container">
+      <h1>Sign Up</h1>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+          {{ form.employee_id.label }}
+          {{ form.employee_id }}
+          {% if form.employee_id.errors %}
+            <div class="error">{{ form.employee_id.errors[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.name.label }}
+          {{ form.name }}
+          {% if form.name.errors %}
+            <div class="error">{{ form.name.errors[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.position.label }}
+          {{ form.position }}
+          {% if form.position.errors %}
+            <div class="error">{{ form.position.errors[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.password.label }}
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="error">{{ form.password.errors[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          {{ form.confirm_password.label }}
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}
+            <div class="error">{{ form.confirm_password.errors[0] }}</div>
+          {% endif %}
+        </div>
+        {{ form.submit }}
+      </form>
+      <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class="flashes">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </body>
+</html>

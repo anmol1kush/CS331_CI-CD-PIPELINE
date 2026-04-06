@@ -1,18 +1,17 @@
-import { useState } from 'react'
-import './App.css'
-import CICDDashboard from './components/CICDDashboard'
-import PipelineButton from './components/PipelineButton'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
+import CICDDashboard from "./components/CICDDashboard";
+import FollowUpPage from "./pages/FollowUpPage";
 
 function App() {
-
   return (
-    <>
-      <h1>Hello</h1>
-      <CICDDashboard />
-      <PipelineButton />
-    </>
-  )
-
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<CICDDashboard />} />
+        <Route path="/follow-up" element={<FollowUpPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

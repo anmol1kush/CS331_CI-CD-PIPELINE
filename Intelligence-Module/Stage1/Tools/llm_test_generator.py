@@ -1,5 +1,5 @@
 """
-LLM-based Test Generator for Stage-1.
+LLM-based Tests Generator for Stage-1.
 
 Generates test cases by prompting an LLM with the source code
 and structural context from the Semantic Engine.
@@ -14,7 +14,7 @@ Responsibilities:
   (edge_case, branch, adversarial, stress, constraint)
 - Return structured test objects
 
-Test object contract (callable_method):
+Tests object contract (callable_method):
 {
     "strategy": str,
     "method_name": str,
@@ -22,7 +22,7 @@ Test object contract (callable_method):
     "expected_output": any
 }
 
-Test object contract (stdin_program):
+Tests object contract (stdin_program):
 {
     "strategy": str,
     "method_name": None,
@@ -30,7 +30,7 @@ Test object contract (stdin_program):
     "expected_output": any
 }
 
-Test object contract (script):
+Tests object contract (script):
 {
     "strategy": str,
     "method_name": None,
@@ -43,9 +43,18 @@ The LLM is responsible for identifying the correct entry method.
 test_executor.py validates the method exists but does not
 perform method detection.
 """
+
+"""
+-> STRESS = "stress"
+-> CONSTRAINT = "constraint"
+
+the abv to be kept at hold as we req confirmation on the ip type to Intelligent Module
+(Source Code only
+or Source + Constraint File)
+"""
 import json
 from Stage1.Providers.gemini_provider import Gemini_Provider
-from config import MAX_TESTS_PER_CALL
+from Stage1.config import MAX_TESTS_PER_CALL
 
 
 class LLM_Test_Generator:
@@ -70,7 +79,7 @@ class LLM_Test_Generator:
             previous_failures
         )
         response = self.provider.generate(prompt)
-        tests = self.parse_response(response, strategy)
+        tests = self.parse_response(response, strategy,execution_model)
 
         return tests
 
@@ -84,6 +93,7 @@ class LLM_Test_Generator:
         previous_failures
     ):
 
+        format_block = self.get_format_block(execution_model, strategy)
         prompt = f"""
 You are an automated software testing system.
 Given the following program, generate test cases.
@@ -99,15 +109,13 @@ Program source code:
 
 Generate at most {MAX_TESTS_PER_CALL} test cases.
 Each test must follow this JSON format:
+{format_block}
 
-[
-  {{
-    "strategy": "{strategy}",
-    "method_name": "<function_name>",
-    "input": <input_data>,
-    "expected_output": <expected_output>
-  }}
-]
+Comparison mode rules:
+- "exact": output must match exactly (default for most problems)
+- "unordered": list output where outer order does not matter (e.g., twoSum returns [0,1] or [1,0])
+- "unordered_nested": nested list where both inner and outer order do not matter (e.g., threeSum, subsets)
+- "float_tolerance": numeric output where minor floating point difference is acceptable (e.g., division, averages)
 
 Rules:
 - Return ONLY valid JSON
@@ -124,23 +132,105 @@ Rules:
 
         return prompt
 
-    def parse_response(self, response, strategy):
+    def get_format_block(self, execution_model, strategy):
+        if execution_model == "callable_method":
+            return f"""
+    Each test must follow this JSON format:
+    [
+      {{
+        "strategy": "{strategy}",
+        "method_name": "<the public method to test inside class Solution>",
+        "input": [<arg1>, <arg2>, ...],
+        "expected_output": <expected_output>,
+        "comparison_mode": "<exact | unordered | unordered_nested | float_tolerance>"
+      }}
+    ]
+    - "method_name" must be a valid method name from class Solution
+    - "input" must be a list of arguments matching the method signature
+    """
+
+        elif execution_model == "stdin_program":
+            return f"""
+    Each test must follow this JSON format:
+    [
+      {{
+        "strategy": "{strategy}",
+        "method_name": null,
+        "input": "<simulated stdin as a single string with newlines>",
+        "expected_output": "<expected stdout as a string>",
+        "comparison_mode": "<exact | unordered | unordered_nested | float_tolerance>"
+      }}
+    ]
+    - "method_name" must always be null for stdin programs
+    - "input" must be a string simulating what the user would type, with newlines separating inputs
+    """
+
+        elif execution_model == "script":
+            return f"""
+    Each test must follow this JSON format:
+    [
+      {{
+        "strategy": "{strategy}",
+        "method_name": null,
+        "input": null,
+        "expected_output": null,
+        "comparison_mode": "exact"
+      }}
+    ]
+    - "method_name" and "input" must always be null for scripts
+    """
+
+        else:
+            raise ValueError(f"Unsupported execution model: {execution_model}")
+
+    def parse_response(self, response, strategy,execution_model):
         try:
             data = json.loads(response)
 
         except json.JSONDecodeError:
             raise ValueError("LLM response is not valid JSON")
 
+        if not isinstance(data, list):
+            raise ValueError("LLM response is not a JSON list")
+
         normalized_tests = []
 
         for test in data:
+            if not isinstance(test, dict):
+                continue
+
+            if not self.validate_test(test,execution_model):
+                continue
+
             normalized_tests.append(
                 {
                     "strategy": test.get("strategy", strategy),
                     "method_name": test.get("method_name"),
                     "input": test.get("input"),
-                    "expected_output": test.get("expected_output")
+                    "expected_output": test.get("expected_output"),
+                    "comparison_mode": test.get("comparison_mode", "exact")
                 }
             )
 
         return normalized_tests
+
+    def validate_test(self, test, execution_model):
+        if execution_model == "callable_method":
+            method_name = test.get("method_name")
+            if not isinstance(method_name, str) or not method_name:
+                return False
+            if not isinstance(test.get("input"), list):
+                return False
+
+        elif execution_model == "stdin_program":
+            if test.get("method_name") is not None:
+                return False
+            if not isinstance(test.get("input"), str):
+                return False
+
+        elif execution_model == "script":
+            if test.get("method_name") is not None:
+                return False
+
+        return True
+
