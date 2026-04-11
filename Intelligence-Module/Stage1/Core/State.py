@@ -10,13 +10,17 @@ class State:
         language: str,
         execution_model: str,
         structural_features: Dict[str, Any],
-        source_code: str = ""
+        source_code: str = "",
+        user_context: str = None
     ):
 
         # pipeline context
         self.language = language
         self.execution_model = execution_model
         self.source_code = source_code
+        self.user_context = user_context
+        self.executable_lines: set = set()
+
 
         # static str features
         self.structural_features = structural_features
@@ -41,17 +45,19 @@ class State:
         self.stop_flag: bool = False
 
     @classmethod
-    def from_semantic_output(cls, semantic_output: Dict[str, Any]):
+    def from_semantic_output(cls, semantic_output: Dict[str, Any], user_context: str = None):
         language = semantic_output.get("language")
         execution_model = semantic_output.get("execution_model")
         structural_features = semantic_output.get("structural_features") or {}
-        source_code = semantic_output.get("normalized_code","")
+        source_code = semantic_output.get("normalized_code", "")
+        State.executable_lines = set(semantic_output.get("executable_lines", []))
 
         return cls(
             language=language,
             execution_model=execution_model,
             structural_features=structural_features,
-            source_code = source_code
+            source_code=source_code,
+            user_context=user_context
         )
 
     def add_generated_tests(self, tests: List[Any], strategy: str):
@@ -104,5 +110,6 @@ class State:
             "branch_coverage": self.branch_coverage,
             "iteration": self.iteration,
             "stop_flag": self.stop_flag,
-            "all_executed_lines": list(self.all_executed_lines)
+            "all_executed_lines": list(self.all_executed_lines),
+            "executable_lines": list(self.executable_lines)
         }

@@ -43,16 +43,34 @@ MAX_TESTS_PER_CALL = 3
 
 # Agent Loop (Environment)
 # Maximum iterations for the agent loop
-MAX_ITERATIONS = 10
+MAX_ITERATIONS = 20
 
 # Agent:-
+
+# ── Contextual TS-UCB Bandit ──
+# UCB exploration constant (higher = more exploration)
+UCB_CONSTANT = 1.0
+
+# Sliding window size for FRRMAB-style reward decay
+# Controls how many recent observations shape the posterior
+SLIDING_WINDOW_SIZE = 8
+
+# Beta prior parameters (uniform prior = 1, 1)
+PRIOR_ALPHA = 1
+PRIOR_BETA = 1
+
+# Contextual bonus weights per strategy
+# Higher = stronger bias toward that strategy when structural features match
+CONTEXT_WEIGHT_BRANCH = 0.15
+CONTEXT_WEIGHT_EDGE = 0.15
+CONTEXT_WEIGHT_ADVERSARIAL = 0.15
 # Temperature decay exponent
 # 1 = linear, 2 = squared, 3 = cubed, 4 = quartic
 # Higher = shifts to exploitation faster
 TEMPERATURE_EXPONENT = 1.5
 
 # Number of stagnant iterations before forced random pick
-STAGNATION_THRESHOLD = 3
+STAGNATION_THRESHOLD = 5
 
 # Oracle validation Layer 1 - Stage1
 # Master toggle — when False, no verification calls are made
@@ -72,6 +90,24 @@ USER_CONTEXT_MAX_LENGTH = 2000
 # These values can be overridden by cost_modes via Orchestrator.
 # Call apply_mode_overrides() before pipeline starts.
 
+# ── Test Signature ──
+# Maximum vocabulary size after pruning (top-K by doc frequency)
+MAX_VOCAB_SIZE = 25
+
+# Minimum document frequency to retain an operation in vocabulary
+MIN_DOC_FREQ = 2
+
+# Component weights for signature vector
+WEIGHT_TFIDF = 1.0
+WEIGHT_FAILURE = 2.0
+
+# Pruned vocab threshold below which group features are included
+MIN_VOCAB_FOR_GROUPS = 15
+
+# ── Test Clustering ──
+# Hard upper bound on cluster count (None = no cap, uses sqrt(n) only)
+MAX_CLUSTER_CAP = None
+
 def apply_mode_overrides(mode_config):
     """
     Overrides Stage 1 config values with mode-specific values.
@@ -90,3 +126,9 @@ def apply_mode_overrides(mode_config):
 
     if mode_config.get("gemini_model") is not None:
         GEMINI_MODEL = mode_config["gemini_model"]
+
+    if mode_config.get("ucb_constant") is not None:
+        UCB_CONSTANT = mode_config["ucb_constant"]
+
+    if mode_config.get("sliding_window_size") is not None:
+        SLIDING_WINDOW_SIZE = mode_config["sliding_window_size"]

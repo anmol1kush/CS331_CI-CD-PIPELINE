@@ -62,7 +62,8 @@ def run_with_timeout(target, args):
             "output": None,
             "error": f"Execution exceeded {TEST_TIMEOUT} seconds",
             "runtime": runtime,
-            "executed_lines": set()
+            "executed_lines": set(),
+            "called_operations": []
         }
 
     try:
@@ -72,7 +73,8 @@ def run_with_timeout(target, args):
             "status": "crash",
             "output": None,
             "error": "Child process died without producing a result",
-            "executed_lines": set()
+            "executed_lines": set(),
+            "called_operations": []
         }
 
     result["runtime"] = runtime
@@ -97,15 +99,26 @@ def callable_worker(source_code, test, queue):
         code = compile(open(tmp_path).read(), tmp_path, 'exec')
 
         executed_lines = set()
+        called_operations = []
 
-        def line_tracer(frame, event, arg):
-            if event == 'line' and frame.f_code.co_filename == tmp_path:
-                executed_lines.add(frame.f_lineno)
-            return line_tracer
+        def local_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                if event == 'line':
+                    executed_lines.add(frame.f_lineno)
+                elif event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+                elif event == 'return':
+                    pass  # captured at call time
+            return local_tracer
 
         def global_tracer(frame, event, arg):
             if frame.f_code.co_filename == tmp_path:
-                return line_tracer
+                if event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+                return local_tracer
+            # Capture calls FROM source file TO builtins/stdlib
+            if event == 'call' and frame.f_back and frame.f_back.f_code.co_filename == tmp_path:
+                called_operations.append(("external", frame.f_code.co_name))
             return None
 
         namespace = {}
@@ -135,7 +148,8 @@ def callable_worker(source_code, test, queue):
             "status": "success",
             "output": output,
             "error": None,
-            "executed_lines": list(executed_lines)
+            "executed_lines": list(executed_lines),
+            "called_operations": list(called_operations)
         })
 
     except Exception as e:
@@ -143,7 +157,8 @@ def callable_worker(source_code, test, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": []
+            "executed_lines": [],
+            "called_operations": list(called_operations) if 'called_operations' in dir() else []
         })
 
     finally:
@@ -161,7 +176,9 @@ def execute_callable(source_code, tests):
             (source_code, test)
         )
 
-        all_executed_lines.update(result.pop("executed_lines", []))
+        per_test_lines = result.pop("executed_lines", [])
+        all_executed_lines.update(per_test_lines)
+        result["per_test_executed_lines"] = set(per_test_lines)
         result["test_id"] = ind
         results.append(result)
 
@@ -181,15 +198,23 @@ def stdin_worker(source_code, fake_input, queue):
         code = compile(open(tmp_path).read(), tmp_path, 'exec')
 
         executed_lines = set()
+        called_operations = []
 
-        def line_tracer(frame, event, arg):
-            if event == 'line' and frame.f_code.co_filename == tmp_path:
-                executed_lines.add(frame.f_lineno)
-            return line_tracer
+        def local_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                if event == 'line':
+                    executed_lines.add(frame.f_lineno)
+                elif event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+            return local_tracer
 
         def global_tracer(frame, event, arg):
             if frame.f_code.co_filename == tmp_path:
-                return line_tracer
+                if event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+                return local_tracer
+            if event == 'call' and frame.f_back and frame.f_back.f_code.co_filename == tmp_path:
+                called_operations.append(("external", frame.f_code.co_name))
             return None
 
         sys.settrace(global_tracer)
@@ -202,7 +227,8 @@ def stdin_worker(source_code, fake_input, queue):
             "status": "success",
             "output": output,
             "error": None,
-            "executed_lines": list(executed_lines)
+            "executed_lines": list(executed_lines),
+            "called_operations": list(called_operations)
         })
 
     except Exception as e:
@@ -210,7 +236,8 @@ def stdin_worker(source_code, fake_input, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": []
+            "executed_lines": [],
+            "called_operations": list(called_operations) if 'called_operations' in dir() else []
         })
 
     finally:
@@ -230,7 +257,9 @@ def execute_stdin(source_code, tests):
             (source_code, fake_input)
         )
 
-        all_executed_lines.update(result.pop("executed_lines", []))
+        per_test_lines = result.pop("executed_lines", [])
+        all_executed_lines.update(per_test_lines)
+        result["per_test_executed_lines"] = set(per_test_lines)
         result["test_id"] = ind
         results.append(result)
 
@@ -247,15 +276,23 @@ def script_worker(source_code, queue):
         code = compile(open(tmp_path).read(), tmp_path, 'exec')
 
         executed_lines = set()
+        called_operations = []
 
-        def line_tracer(frame, event, arg):
-            if event == 'line' and frame.f_code.co_filename == tmp_path:
-                executed_lines.add(frame.f_lineno)
-            return line_tracer
+        def local_tracer(frame, event, arg):
+            if frame.f_code.co_filename == tmp_path:
+                if event == 'line':
+                    executed_lines.add(frame.f_lineno)
+                elif event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+            return local_tracer
 
         def global_tracer(frame, event, arg):
             if frame.f_code.co_filename == tmp_path:
-                return line_tracer
+                if event == 'call':
+                    called_operations.append(("func", frame.f_code.co_name))
+                return local_tracer
+            if event == 'call' and frame.f_back and frame.f_back.f_code.co_filename == tmp_path:
+                called_operations.append(("external", frame.f_code.co_name))
             return None
 
         sys.settrace(global_tracer)
@@ -266,7 +303,8 @@ def script_worker(source_code, queue):
             "status": "success",
             "output": None,
             "error": None,
-            "executed_lines": list(executed_lines)
+            "executed_lines": list(executed_lines),
+            "called_operations": list(called_operations)
         })
 
     except Exception as e:
@@ -274,7 +312,8 @@ def script_worker(source_code, queue):
             "status": "exception",
             "output": None,
             "error": str(e),
-            "executed_lines": []
+            "executed_lines": [],
+            "called_operations": list(called_operations) if 'called_operations' in dir() else []
         })
 
     finally:
@@ -288,10 +327,11 @@ def execute_script(source_code):
         (source_code,)
     )
 
-    all_executed_lines = result.pop("executed_lines", [])
+    per_test_lines = result.pop("executed_lines", [])
+    result["per_test_executed_lines"] = set(per_test_lines)
     result["test_id"] = 0
 
-    return [result], all_executed_lines
+    return [result], set(per_test_lines)
 
 
 # def find_method(solution_obj):

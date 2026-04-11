@@ -1,15 +1,17 @@
 """
-Objective function for Stage-1.
+B(S) = log(1 + Σ validation_confidence_i)
+Where validation_confidence_i is the Bayesian posterior confidence
+for each detected bug, derived from triangulation verification.
 
-Current design (incremental version):
-O(S) = C(S) + B(S)
-Where
-C(S) = wl * line_coverage + wb * branch_coverage
-wl = line_count / (line_count + branch_count)
-wb = branch_count / (line_count + branch_count)
+Confidence values:
+    O1 (all agree, pass):       0.998 — not a bug, never reaches here
+    O2 (E=I≠A, confirmed bug):  0.829
+    O3 (hallucination):         0.000 — dropped by bug_detector, never reaches here
+    O4 (inconclusive):          0.432
+    Exceptions/timeouts:        1.0 (default — execution-level signals)
 
-B(S) = log(1 + total_bugs)
-total_bugs = exceptions + failures + incorrect_outputs
+When triangulation is disabled, confidence defaults to 1.0
+and B(S) reduces to log(1 + total_bugs) — identical to original behavior.
 
 NOTE:
 For the current iteration all bug types are treated equally.
@@ -37,12 +39,12 @@ def evaluate_state(state):
 
     coverage_score = wl * line_cov + wb * branch_cov
 
-    exceptions = len(state.exceptions)
-    failures = len(state.failures)
-    incorrect_outputs = len(state.incorrect_outputs)
+    exception_confidence = sum(b.get("validation_confidence", 1.0) for b in state.exceptions)
+    failure_confidence = sum(b.get("validation_confidence", 1.0) for b in state.failures)
+    incorrect_confidence = sum(b.get("validation_confidence", 1.0) for b in state.incorrect_outputs)
 
-    total_bugs = exceptions + failures + incorrect_outputs
-    bug_score = math.log(1 + total_bugs)
+    weighted_bugs = exception_confidence + failure_confidence + incorrect_confidence
+    bug_score = math.log(1 + weighted_bugs)
 
     objective_value = coverage_score + bug_score
     return objective_value

@@ -15,10 +15,10 @@ from Stage1.Deterministic.Stage1_Semantic import Semantic_Engine
 from Stage1.Core.State import State
 from Stage1.Core.Environment import Environment
 from Stage1.config import MAX_ITERATIONS
-from Stage1.Algo.hybrid_search import Hybrid_Search
+from Stage1.Algo.contextual_ts_ucb import Contextual_TS_UCB
 
 
-def run_stage1(stage0_result: dict, source_code: str):
+def run_stage1(stage0_result: dict, source_code: str, user_context: str = None):
     # Stage-1.1–1.3 : Semantic analysis
     semantic_engine = Semantic_Engine(stage0_result, source_code)
     semantic_output = semantic_engine.run()
@@ -27,10 +27,10 @@ def run_stage1(stage0_result: dict, source_code: str):
     structural_features = semantic_output.get("structural_features")
 
     # Initialize Agent State
-    state = State.from_semantic_output(semantic_output)
+    state = State.from_semantic_output(semantic_output, user_context=user_context)
 
     # Create Environment
-    algorithm = Hybrid_Search()
+    algorithm = Contextual_TS_UCB()
     env = Environment(state, algorithm, max_iterations=MAX_ITERATIONS)
 
     # Run Agent Loop

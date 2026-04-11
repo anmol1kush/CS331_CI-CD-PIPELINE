@@ -54,7 +54,8 @@ or Source + Constraint File)
 """
 import json
 from Stage1.Providers.gemini_provider import Gemini_Provider
-from Stage1.config import MAX_TESTS_PER_CALL
+from Stage1.config import MAX_TESTS_PER_CALL, USER_CONTEXT_MAX_LENGTH
+
 
 
 class LLM_Test_Generator:
@@ -62,13 +63,17 @@ class LLM_Test_Generator:
         self.provider = Gemini_Provider()
 
     def generate_tests(
-        self,
-        source_code,
-        execution_model,
-        structural_features,
-        strategy,
-        existing_tests=None,
-        previous_failures=None
+            self,
+            source_code,
+            execution_model,
+            structural_features,
+            strategy,
+            existing_tests=None,
+            previous_failures=None,
+            user_context=None,
+            iteration=0,
+            compressed_source=None,
+            cluster_representatives=None
     ):
         prompt = self.build_prompt(
             source_code,
@@ -76,36 +81,55 @@ class LLM_Test_Generator:
             structural_features,
             strategy,
             existing_tests,
-            previous_failures
+            previous_failures,
+            user_context,
+            iteration,
+            compressed_source,
+            cluster_representatives
         )
         response = self.provider.generate(prompt)
-        tests = self.parse_response(response, strategy,execution_model)
+        tests = self.parse_response(response, strategy, execution_model)
+
 
         return tests
 
     def build_prompt(
-        self,
-        source_code,
-        execution_model,
-        structural_features,
-        strategy,
-        existing_tests,
-        previous_failures
+            self,
+            source_code,
+            execution_model,
+            structural_features,
+            strategy,
+            existing_tests,
+            previous_failures,
+            user_context=None,
+            iteration=0,
+            compressed_source=None,
+            cluster_representatives=None
     ):
 
         format_block = self.get_format_block(execution_model, strategy)
+
+        # Iteration 0: full source code
+        # Iteration 1+: compressed representation
+        if iteration == 0 or compressed_source is None:
+            code_section = f"""Program source code:
+--------------------
+{source_code}
+--------------------"""
+        else:
+            code_section = f"""Program structure (compressed):
+--------------------
+{compressed_source}
+--------------------"""
+
         prompt = f"""
 You are an automated software testing system.
 Given the following program, generate test cases.
 
 Execution model: {execution_model}
 Strategy: {strategy}
-Structural features:
-{json.dumps(structural_features, indent=2)}
-Program source code:
---------------------
-{source_code}
---------------------
+
+{code_section}
 
 Generate at most {MAX_TESTS_PER_CALL} test cases.
 Each test must follow this JSON format:
@@ -124,11 +148,27 @@ Rules:
 - Include edge and adversarial cases
 """
 
-        if existing_tests:
+        # Test history: cluster representatives (iteration 1+) or raw tests (iteration 0)
+        if iteration > 0 and cluster_representatives:
+            prompt += f"\nExisting tests (representative samples):\n{json.dumps(cluster_representatives, indent=2, default=str)}\n"
+            prompt += "Note: above tests are representatives from clustered test history. Generate tests that cover DIFFERENT regions and behaviors.\n"
+        elif existing_tests:
             prompt += f"\nExisting tests:\n{json.dumps(existing_tests, indent=2)}\n"
 
         if previous_failures:
             prompt += f"\nPrevious failures:\n{json.dumps(previous_failures, indent=2)}\n"
+
+        # User context only at iteration 0 (already embedded in compressed source at iteration 1+)
+        if iteration == 0 and user_context:
+            if len(user_context) > USER_CONTEXT_MAX_LENGTH:
+                user_context = user_context[:USER_CONTEXT_MAX_LENGTH]
+                print(f"    [LLM Generator] User context truncated to {USER_CONTEXT_MAX_LENGTH} chars")
+
+            prompt += f"""
+        Additional context from the developer:
+        \"{user_context}\"
+        Use this to guide which aspects of the code to focus your tests on.
+        """
 
         return prompt
 

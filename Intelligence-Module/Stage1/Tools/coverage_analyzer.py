@@ -13,15 +13,18 @@ Downstream consumer: Objective function (evaluate_state)
 import ast
 
 
-def compute_coverage(source_code, executed_lines):
-    total_lines = len(source_code.splitlines())
-
-    if total_lines == 0:
-        line_coverage = 0.0
+def compute_coverage(source_code, executed_lines, executable_lines=None):
+    if executable_lines and len(executable_lines) > 0:
+        covered = executed_lines & executable_lines
+        line_coverage = len(covered) / len(executable_lines)
     else:
-        line_coverage = len(executed_lines) / total_lines
+        total = len(source_code.splitlines())
+        if total == 0:
+            line_coverage = 0.0
+        else:
+            line_coverage = len(executed_lines) / total
 
-    branch_coverage = compute_branch_coverage(source_code, executed_lines)
+    branch_coverage = compute_branch_coverage(source_code, executed_lines, executable_lines)
 
     return {
         "line_coverage": line_coverage,
@@ -29,13 +32,17 @@ def compute_coverage(source_code, executed_lines):
     }
 
 
-def compute_branch_coverage(source_code, executed_lines):
+def compute_branch_coverage(source_code, executed_lines, executable_lines=None):
     tree = ast.parse(source_code)
     total_paths = 0
     executed_paths = 0
 
     for node in ast.walk(tree):
         if isinstance(node, ast.If):
+            # Skip branches in non-executable regions (dead code, docstrings)
+            if executable_lines and node.lineno not in executable_lines:
+                continue
+
             # True path
             total_paths += 1
             if node.body and node.body[0].lineno in executed_lines:
@@ -48,6 +55,10 @@ def compute_branch_coverage(source_code, executed_lines):
                     executed_paths += 1
 
         if isinstance(node, (ast.For, ast.While)):
+            # Skip loops in non-executable regions
+            if executable_lines and node.lineno not in executable_lines:
+                continue
+
             # Loop body executed path
             total_paths += 1
             if node.body and node.body[0].lineno in executed_lines:

@@ -45,7 +45,8 @@ def detect_bugs(results, tests):
                 "error": "Tests was not executed — result missing",
                 "status": "missing",
                 "input": test.get("input"),
-                "strategy": test.get("strategy")
+                "strategy": test.get("strategy"),
+                "validation_confidence": test.get("validation_confidence", 1.0)
             })
             continue
 
@@ -56,7 +57,8 @@ def detect_bugs(results, tests):
                 "test_id": result.get("test_id"),
                 "error": result.get("error"),
                 "input": test.get("input"),
-                "strategy": test.get("strategy")
+                "strategy": test.get("strategy"),
+                "validation_confidence": test.get("validation_confidence", 1.0)
             })
 
         elif status in ("timeout", "crash"):
@@ -65,7 +67,8 @@ def detect_bugs(results, tests):
                 "error": result.get("error"),
                 "status": status,
                 "input": test.get("input"),
-                "strategy": test.get("strategy")
+                "strategy": test.get("strategy"),
+                "validation_confidence": test.get("validation_confidence", 1.0)
             })
 
         elif status == "success":
@@ -78,13 +81,19 @@ def detect_bugs(results, tests):
             mode = test.get("comparison_mode", "exact")
 
             if not compare_outputs(actual, expected):
+                verdict = test.get("verdict")
+                if verdict == "likely_hallucination":
+                    continue
+
                 incorrect_outputs.append({
                     "test_id": result.get("test_id"),
                     "input": test.get("input"),
                     "expected": expected,
                     "actual": actual,
                     "strategy": test.get("strategy"),
-                    "comparison_mode": mode
+                    "comparison_mode": mode,
+                    "validation_confidence": test.get("validation_confidence", 1.0),
+                    "verdict": verdict
                 })
 
     return {
