@@ -20,19 +20,21 @@ class Gemini_Provider(Base_LLM_Provider):
 
         self.client = genai.Client(api_key=api_key)
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, temperature: float = None) -> str:
         last_error = None
 
         for attempt in range(LLM_MAX_RETRIES):
             try:
                 print(f"    [Gemini] API call attempt {attempt + 1}...")
 
+                gen_config = {"response_mime_type": "application/json"}
+                if temperature is not None:
+                    gen_config["temperature"] = temperature
+
                 response = self.client.models.generate_content(
                     model=GEMINI_MODEL,
                     contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json"
-                    )
+                    config=types.GenerateContentConfig(**gen_config)
                 )
 
                 try:

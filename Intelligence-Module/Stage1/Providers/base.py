@@ -9,7 +9,7 @@ class Base_LLM_Provider(ABC):
     """
 
     @abstractmethod
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, temperature: float = None) -> str:
         """
         Accepts a fully formatted prompt string.
 
