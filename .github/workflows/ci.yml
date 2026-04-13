@@ -27,10 +27,5 @@ jobs:
       - name: Install Python Dependencies
         run: pip install -r requirements.txt
 
-      - name: Run AI Test Generator
-        run: python python/app.py
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_REPO_OWNER: ${{ secrets.REPO_OWNER }}
-          GITHUB_REPO_NAME: ${{ secrets.REPO_NAME }}
-          WORKFLOW_FILE: ${{ secrets.WORKFLOW_FILE }}
+      - name: Run Target Orchestrator
+        run: python run_target_orchestrator.py
