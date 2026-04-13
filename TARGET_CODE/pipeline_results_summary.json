@@ -1,0 +1,508 @@
+{
+  "target.py": {
+    "pipeline_status": "STAGE_2_COMPLETE",
+    "stage0": {
+      "stage": 0,
+      "status": "PASS",
+      "check_type": "compile_only",
+      "language": "python",
+      "executed": false,
+      "total_errors": 0,
+      "errors": []
+    },
+    "stage1": {
+      "stage": 1,
+      "status": "STAGE1_COMPLETE",
+      "language": "python",
+      "execution_model": "callable_method",
+      "structural_features": {
+        "function_count": 5,
+        "class_count": 2,
+        "loop_count": 4,
+        "max_nesting_depth": 9,
+        "recursion_detected": false,
+        "direct_recursion": false,
+        "mutual_recursion": false,
+        "recursion_cycles": [],
+        "line_count": 78,
+        "branching_factor": 6,
+        "executable_lines": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          25,
+          26,
+          27,
+          28,
+          30,
+          31,
+          32,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          43,
+          45,
+          47,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          58,
+          60,
+          61,
+          62,
+          63
+        ],
+        "exception_blocks": [],
+        "global_variable_usage": [],
+        "comprehension_count": {
+          "list": 0,
+          "dict": 0,
+          "set": 0,
+          "generator": 0
+        },
+        "cyclomatic_complexity": [
+          {
+            "function": "create_linked_list",
+            "line": 47,
+            "complexity": 3
+          },
+          {
+            "function": "print_linked_list",
+            "line": 58,
+            "complexity": 3
+          },
+          {
+            "function": "__init__",
+            "line": 8,
+            "complexity": 1
+          },
+          {
+            "function": "mergeKLists",
+            "line": 13,
+            "complexity": 4
+          },
+          {
+            "function": "merge_lists",
+            "line": 30,
+            "complexity": 5
+          }
+        ],
+        "method_signatures": [
+          {
+            "name": "create_linked_list",
+            "line": 47,
+            "is_async": false,
+            "params": [
+              {
+                "name": "values"
+              }
+            ],
+            "defaults": [],
+            "return_annotation": null,
+            "decorators": [],
+            "is_static": false,
+            "is_classmethod": false,
+            "is_property": false,
+            "parent_class": null
+          },
+          {
+            "name": "print_linked_list",
+            "line": 58,
+            "is_async": false,
+            "params": [
+              {
+                "name": "head"
+              }
+            ],
+            "defaults": [],
+            "return_annotation": null,
+            "decorators": [],
+            "is_static": false,
+            "is_classmethod": false,
+            "is_property": false,
+            "parent_class": null
+          },
+          {
+            "name": "__init__",
+            "line": 8,
+            "is_async": false,
+            "params": [
+              {
+                "name": "self"
+              },
+              {
+                "name": "val"
+              },
+              {
+                "name": "next"
+              }
+            ],
+            "defaults": [
+              "0",
+              "None"
+            ],
+            "return_annotation": null,
+            "decorators": [],
+            "is_static": false,
+            "is_classmethod": false,
+            "is_property": false,
+            "parent_class": "ListNode"
+          },
+          {
+            "name": "mergeKLists",
+            "line": 13,
+            "is_async": false,
+            "params": [
+              {
+                "name": "self"
+              },
+              {
+                "name": "lists",
+                "annotation": "list[Optional[ListNode]]"
+              }
+            ],
+            "defaults": [],
+            "return_annotation": "Optional[ListNode]",
+            "decorators": [],
+            "is_static": false,
+            "is_classmethod": false,
+            "is_property": false,
+            "parent_class": "Solution"
+          },
+          {
+            "name": "merge_lists",
+            "line": 30,
+            "is_async": false,
+            "params": [
+              {
+                "name": "self"
+              },
+              {
+                "name": "l1"
+              },
+              {
+                "name": "l2"
+              }
+            ],
+            "defaults": [],
+            "return_annotation": null,
+            "decorators": [],
+            "is_static": false,
+            "is_classmethod": false,
+            "is_property": false,
+            "parent_class": "Solution"
+          }
+        ],
+        "branch_conditions": [
+          {
+            "line": 49,
+            "condition": "not values",
+            "has_else": false,
+            "has_elif": false
+          },
+          {
+            "line": 25,
+            "condition": "lists",
+            "has_else": true,
+            "has_elif": false
+          },
+          {
+            "line": 35,
+            "condition": "l1.val <= l2.val",
+            "has_else": true,
+            "has_elif": false
+          }
+        ],
+        "loop_bounds": [
+          {
+            "type": "for",
+            "line": 53,
+            "target": "val",
+            "iterator": "values[1:]"
+          },
+          {
+            "type": "while",
+            "line": 61,
+            "condition": "current"
+          },
+          {
+            "type": "while",
+            "line": 16,
+            "condition": "i < ind"
+          },
+          {
+            "type": "while",
+            "line": 34,
+            "condition": "l1 and l2"
+          }
+        ],
+        "return_patterns": [
+          {
+            "function": "create_linked_list",
+            "line": 47,
+            "return_count": 2,
+            "returns": [
+              {
+                "line": 56,
+                "value": "head"
+              },
+              {
+                "line": 50,
+                "value": "None"
+              }
+            ],
+            "implicit_none": false
+          },
+          {
+            "function": "print_linked_list",
+            "line": 58,
+            "return_count": 0,
+            "returns": [],
+            "implicit_none": true
+          },
+          {
+            "function": "__init__",
+            "line": 8,
+            "return_count": 0,
+            "returns": [],
+            "implicit_none": true
+          },
+          {
+            "function": "mergeKLists",
+            "line": 13,
+            "return_count": 2,
+            "returns": [
+              {
+                "line": 26,
+                "value": "lists[-1]"
+              },
+              {
+                "line": 28,
+                "value": "None"
+              }
+            ],
+            "implicit_none": false
+          },
+          {
+            "function": "merge_lists",
+            "line": 30,
+            "return_count": 1,
+            "returns": [
+              {
+                "line": 45,
+                "value": "res.next"
+              }
+            ],
+            "implicit_none": false
+          }
+        ],
+        "class_hierarchy": [
+          {
+            "name": "ListNode",
+            "line": 7,
+            "bases": [],
+            "methods": [
+              {
+                "name": "__init__",
+                "line": 8,
+                "is_public": true
+              }
+            ],
+            "init_params": [
+              {
+                "name": "val"
+              },
+              {
+                "name": "next"
+              }
+            ]
+          },
+          {
+            "name": "Solution",
+            "line": 12,
+            "bases": [],
+            "methods": [
+              {
+                "name": "mergeKLists",
+                "line": 13,
+                "is_public": true
+              },
+              {
+                "name": "merge_lists",
+                "line": 30,
+                "is_public": true
+              }
+            ],
+            "init_params": []
+          }
+        ],
+        "assert_statements": [],
+        "import_analysis": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "line": 6,
+            "category": "stdlib"
+          }
+        ],
+        "async_patterns": {
+          "async_functions": 0,
+          "await_count": 0,
+          "async_for_count": 0,
+          "async_with_count": 0,
+          "is_async_code": false
+        },
+        "entry_points": [
+          {
+            "type": "class",
+            "name": "Solution",
+            "line": 12,
+            "public_methods": [
+              "mergeKLists",
+              "merge_lists"
+            ]
+          },
+          {
+            "type": "function",
+            "name": "create_linked_list",
+            "line": 47
+          },
+          {
+            "type": "function",
+            "name": "print_linked_list",
+            "line": 58
+          }
+        ],
+        "operation_vocabulary": [
+          {
+            "category": "builtin_or_func",
+            "name": "ListNode"
+          },
+          {
+            "category": "builtin_or_func",
+            "name": "len"
+          },
+          {
+            "category": "builtin_or_func",
+            "name": "print"
+          },
+          {
+            "category": "method",
+            "name": "append"
+          },
+          {
+            "category": "method",
+            "name": "merge_lists"
+          },
+          {
+            "category": "operator",
+            "name": "add"
+          },
+          {
+            "category": "operator",
+            "name": "and"
+          },
+          {
+            "category": "operator",
+            "name": "index"
+          },
+          {
+            "category": "operator",
+            "name": "lt"
+          },
+          {
+            "category": "operator",
+            "name": "lte"
+          },
+          {
+            "category": "operator",
+            "name": "not"
+          },
+          {
+            "category": "operator",
+            "name": "slice"
+          },
+          {
+            "category": "operator",
+            "name": "usub"
+          },
+          {
+            "category": "qualified",
+            "name": "lists.append"
+          },
+          {
+            "category": "qualified",
+            "name": "self.merge_lists"
+          }
+        ]
+      },
+      "coverage": {
+        "line": 0.0,
+        "branch": 0.0
+      },
+      "bugs": {
+        "exceptions": [],
+        "failures": [],
+        "incorrect_outputs": []
+      },
+      "executed_tests": [],
+      "generated_test_cases": []
+    },
+    "stage2": {
+      "stage": 2,
+      "status": "STAGE2_COMPLETE",
+      "bugs": {
+        "confirmed": [],
+        "inconclusive": [],
+        "hallucinated": [],
+        "summary": {
+          "confirmed_count": 0,
+          "inconclusive_count": 0,
+          "hallucinated_count": 0,
+          "total_incoming": 0,
+          "total_after_filtering": 0
+        }
+      },
+      "tests": {
+        "valid_test_cases": [],
+        "coverage_only_tests": [],
+        "total_generated": 0,
+        "total_valid": 0,
+        "filtered_count": 0
+      },
+      "coverage": {
+        "line": 0.0,
+        "branch": 0.0
+      },
+      "mutation_testing": {},
+      "weak_tests": [],
+      "strong_tests": []
+    }
+  }
+}

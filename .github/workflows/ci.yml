@@ -27,7 +27,7 @@ jobs:
       - name: Install Python Dependencies
         run: pip install -r requirements.txt
 
-      - name: Run Target Orchestrator
+      - name: Run AI Tester
         run: python run_target_orchestrator.py
 
       - name: Build Successful Message
