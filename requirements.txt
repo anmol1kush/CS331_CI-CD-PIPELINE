@@ -12,3 +12,6 @@ docker
 # Intelligence Module Dependencies
 google-generativeai
 python-dotenv
+google-genai
+numpy
+scikit-learn

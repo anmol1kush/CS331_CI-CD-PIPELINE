@@ -43,7 +43,7 @@ MAX_TESTS_PER_CALL = 3
 
 # Agent Loop (Environment)
 # Maximum iterations for the agent loop
-MAX_ITERATIONS = 20
+MAX_ITERATIONS = 2
 
 # Agent:-
 

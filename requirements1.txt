@@ -1,0 +1,43 @@
+# ============================================
+# AI-Driven CI/CD Pipeline — VM Dependencies
+# ============================================
+
+# ----- 1. Python Runtime -----
+# Python 3.10+ required
+# (sys.stdlib_module_names, ast.unparse support)
+
+# ----- 2. Standard Library (no install needed) -----
+# os, sys, re, ast, json, copy, uuid, math, random
+# time, io, tempfile, subprocess, multiprocessing
+# enum, typing, collections (deque, Counter)
+# itertools (zip_longest), abc
+
+# ----- 3. Third-Party (pip install) -----
+python-dotenv
+google-genai
+numpy
+scikit-learn
+# anthropic          # future — when claude_provider.py is implemented
+
+# ----- 4. System-Level (apt install) -----
+# sudo apt update && sudo apt install -y gcc g++ default-jdk
+#
+# gcc / g++      — C/C++ compilation (Stage0_Compile.py)
+# default-jdk    — Java compilation via javac (Stage0_Compile.py)
+# Writable /tmp  — tempfile usage in Stage0
+# /dev/shm       — must be mounted (multiprocessing shared memory)
+# ulimit         — sufficient process limits for test_executor.py sandboxing
+
+# ----- 5. Environment Variables -----
+# Create a .env file in project root with:
+# GEMINI_API_KEY=<your-key-here>
+
+# ----- 6. Install Commands Summary -----
+# pip install -r requirements.txt
+# sudo apt update && sudo apt install -y gcc g++ default-jdk
+
+# ----- 7. Notes -----
+# - claude_provider.py is currently empty; uncomment anthropic above when implemented
+# - Compilers (gcc, g++, javac) are runtime deps for Stage0 — only needed
+#   if pipeline processes C/C++/Java source; Python-only submissions don't need them
+# - No version pins currently; run `pip freeze > requirements.lock` after stable setup
