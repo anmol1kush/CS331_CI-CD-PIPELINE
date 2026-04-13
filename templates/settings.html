@@ -3,21 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Signup - CI/CD Dashboard</title>
+    <title>Settings - CI/CD Pipeline</title>
     <link rel="stylesheet" href="/static/css/styles.css">
   </head>
   <body>
     <div class="login-container">
-      <h1>Sign Up</h1>
+      <h1>Account Settings</h1>
       <form method="post">
         {{ form.hidden_tag() }}
-        <div class="form-group">
-          {{ form.username.label }}
-          {{ form.username }}
-          {% if form.username.errors %}
-            <div class="error">{{ form.username.errors[0] }}</div>
-          {% endif %}
-        </div>
         <div class="form-group">
           {{ form.name.label }}
           {{ form.name }}
@@ -26,17 +19,17 @@
           {% endif %}
         </div>
         <div class="form-group">
-          {{ form.position.label }}
-          {{ form.position }}
-          {% if form.position.errors %}
-            <div class="error">{{ form.position.errors[0] }}</div>
+          {{ form.current_password.label }}
+          {{ form.current_password }}
+          {% if form.current_password.errors %}
+            <div class="error">{{ form.current_password.errors[0] }}</div>
           {% endif %}
         </div>
         <div class="form-group">
-          {{ form.password.label }}
-          {{ form.password }}
-          {% if form.password.errors %}
-            <div class="error">{{ form.password.errors[0] }}</div>
+          {{ form.new_password.label }}
+          {{ form.new_password }}
+          {% if form.new_password.errors %}
+            <div class="error">{{ form.new_password.errors[0] }}</div>
           {% endif %}
         </div>
         <div class="form-group">
@@ -48,7 +41,8 @@
         </div>
         {{ form.submit }}
       </form>
-      <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+      <p><a href="{{ url_for('logout') }}">Logout</a></p>
+      <p><a href="{{ url_for('index') }}">Back to Home</a></p>
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <ul class="flashes">

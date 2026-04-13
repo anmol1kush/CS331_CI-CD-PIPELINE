@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard - CI/CD Pipeline</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <header>
+        <h1>Admin Dashboard</h1>
+        <div class="user-info">
+          <span>Welcome, {{ current_user.name }} ({{ current_user.position }})</span>
+          <a href="{{ url_for('settings') }}">Settings</a>
+        </div>
+      </header>
+
+      <section class="employee-list">
+        <h2>All Employees</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for employee in employees %}
+            <tr>
+              <td>{{ employee.employee_id }}</td>
+              <td>{{ employee.username }}</td>
+              <td>{{ employee.name }}</td>
+              <td>{{ employee.position }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </body>
+</html>

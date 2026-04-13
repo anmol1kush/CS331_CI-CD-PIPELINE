@@ -99,7 +99,7 @@ AI Test Generator (Python)
  │
  │ Save / Fetch Data
  ▼
-PostgreSQL Database
+MongoDB Database
 ```
 
 ---

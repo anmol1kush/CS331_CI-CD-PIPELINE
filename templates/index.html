@@ -35,14 +35,9 @@
       <h1>AI Test Runner</h1>
       <div class="user-info">
         <span>Welcome, {{ current_user.name }} ({{ current_user.position }})</span>
-        <a href="{{ url_for('logout') }}">Logout</a>
+        <a href="{{ url_for('settings') }}">Settings</a>
       </div>
     </header>
-    <nav class="dashboard-nav">
-      <a href="{{ url_for('dashboard') }}">Home</a>
-      <a href="{{ url_for('index') }}">AI Test Runner</a>
-      <a href="{{ url_for('show_webhooks') }}">Webhooks</a>
-    </nav>
     <main class="dashboard-main">
       <div class="upload-container">
         <h2>AI-Powered Code Analysis</h2>

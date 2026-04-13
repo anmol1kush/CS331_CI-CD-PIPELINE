@@ -2,11 +2,11 @@
 Flask
 Flask-Login
 Flask-WTF
-Flask-SQLAlchemy
 WTForms
 bcrypt
 requests
 pymongo
+dnspython
 docker
 
 # Intelligence Module Dependencies
