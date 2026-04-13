@@ -108,7 +108,8 @@ def run_test_suite(state):
     results, executed_lines = run_tests(state.source_code, pending_tests, state.execution_model,
                                         language=state.language)
     state.all_executed_lines.update(executed_lines)
-    coverage = compute_coverage(state.source_code, state.all_executed_lines, state.executable_lines)
+    coverage = compute_coverage(state.source_code, state.all_executed_lines, state.executable_lines,
+                                language=state.language)
 
     state.update_coverage(
         coverage.get("line_coverage", 0),
