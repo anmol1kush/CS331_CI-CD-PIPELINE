@@ -78,7 +78,8 @@ def generate_tests(state, strategy):
             user_context=state.user_context,
             iteration=iteration,
             compressed_source=compressed_source,
-            cluster_representatives=cluster_representatives
+            cluster_representatives=cluster_representatives,
+            language=state.language
         )
 
     except (ValueError, RuntimeError) as e:

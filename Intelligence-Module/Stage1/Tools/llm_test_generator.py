@@ -73,7 +73,8 @@ class LLM_Test_Generator:
             user_context=None,
             iteration=0,
             compressed_source=None,
-            cluster_representatives=None
+            cluster_representatives=None,
+            language="python"
     ):
         prompt = self.build_prompt(
             source_code,
@@ -85,7 +86,8 @@ class LLM_Test_Generator:
             user_context,
             iteration,
             compressed_source,
-            cluster_representatives
+            cluster_representatives,
+            language
         )
         response = self.provider.generate(prompt)
         tests = self.parse_response(response, strategy, execution_model)
@@ -104,10 +106,11 @@ class LLM_Test_Generator:
             user_context=None,
             iteration=0,
             compressed_source=None,
-            cluster_representatives=None
+            cluster_representatives=None,
+            language="python"
     ):
 
-        format_block = self.get_format_block(execution_model, strategy)
+        format_block = self.get_format_block(execution_model, strategy, language)
 
         # Iteration 0: full source code
         # Iteration 1+: compressed representation
@@ -126,9 +129,10 @@ class LLM_Test_Generator:
 You are an automated software testing system.
 Given the following program, generate test cases.
 
+Language: {language}
 Execution model: {execution_model}
 Strategy: {strategy}
-
+{self._language_conventions(language)}
 {code_section}
 
 Generate at most {MAX_TESTS_PER_CALL} test cases.
@@ -172,21 +176,22 @@ Rules:
 
         return prompt
 
-    def get_format_block(self, execution_model, strategy):
+    def get_format_block(self, execution_model, strategy, language="python"):
         if execution_model == "callable_method":
+            method_hint = self._callable_method_hint(language)
             return f"""
     Each test must follow this JSON format:
     [
       {{
         "strategy": "{strategy}",
-        "method_name": "<the public method to test inside class Solution>",
+        "method_name": "<the public method/function to test>",
         "input": [<arg1>, <arg2>, ...],
         "expected_output": <expected_output>,
         "comparison_mode": "<exact | unordered | unordered_nested | float_tolerance>"
       }}
     ]
-    - "method_name" must be a valid method name from class Solution
-    - "input" must be a list of arguments matching the method signature
+    {method_hint}
+    - "input" must be a list of arguments matching the method/function signature
     """
 
         elif execution_model == "stdin_program":
@@ -222,6 +227,53 @@ Rules:
 
         else:
             raise ValueError(f"Unsupported execution model: {execution_model}")
+
+    def _callable_method_hint(self, language):
+        """Language-specific hints for callable_method test format."""
+        if language == "python":
+            return '- "method_name" must be a valid method name from class Solution'
+        elif language in ("javascript", "typescript"):
+            return ('- "method_name" must be a valid exported function name or method from the exported class\n'
+                    '- For module.exports/export default, use the primary function name')
+        elif language == "java":
+            return ('- "method_name" must be a valid public method from the Solution class\n'
+                    '- Input types must match Java method signature (int, String, int[], etc.)')
+        elif language in ("c", "cpp"):
+            return ('- "method_name" must be a valid function name defined in the source\n'
+                    '- Input types must match C/C++ function parameter types')
+        return '- "method_name" must be a valid callable from the source'
+
+    def _language_conventions(self, language):
+        """Language-specific conventions block for the prompt."""
+        if language == "python":
+            return """Language conventions:
+- Entry point is typically a method inside class Solution
+- For stdin programs, input() reads from stdin
+- Use Python-native types in test inputs (list, dict, str, int, float, bool, None)"""
+
+        elif language in ("javascript", "typescript"):
+            return """Language conventions:
+- Entry point is typically an exported function (module.exports or export default)
+- For stdin programs, process.stdin or readline is used
+- Use JSON-compatible types in test inputs (array, object, string, number, boolean, null)
+- Arrays use 0-based indexing"""
+
+        elif language == "java":
+            return """Language conventions:
+- Entry point is typically a public method in the Solution class
+- For stdin programs, Scanner or BufferedReader reads from System.in
+- Use Java-compatible types: int, long, double, String, int[], List<Integer>, etc.
+- Arrays use 0-based indexing"""
+
+        elif language in ("c", "cpp"):
+            return """Language conventions:
+- Entry point is typically a function (not inside a class for C)
+- For stdin programs, scanf/fgets reads from stdin
+- Use C-compatible types: int, float, double, char*, arrays
+- Arrays use 0-based indexing
+- Strings are null-terminated char arrays"""
+
+        return ""
 
     def parse_response(self, response, strategy,execution_model):
         try:
