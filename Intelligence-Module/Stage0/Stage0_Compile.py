@@ -52,6 +52,34 @@ ERROR_RULES = [
             r"public class .* should be declared in a file named"
         ],
         "languages": {"java"}
+    },
+    {
+        "type": "SyntaxError",
+        "patterns": [
+            r"unexpected token",
+            r"unexpected identifier",
+            r"unexpected end of input",
+            r"unterminated string literal",
+            r"missing \) after argument list"
+        ],
+        "languages": {"javascript", "typescript"}
+    },
+    {
+        "type": "TypeError",
+        "patterns": [
+            r"type '.*' is not assignable to type",
+            r"property '.*' does not exist on type",
+            r"cannot find name"
+        ],
+        "languages": {"typescript"}
+    },
+    {
+        "type": "ImportError",
+        "patterns": [
+            r"cannot find module",
+            r"module not found"
+        ],
+        "languages": {"javascript", "typescript"}
     }
 ]
 
@@ -91,6 +119,12 @@ def infer_language(ext: str):
         return "cpp"
     if ext == ".java":
         return "java"
+    if ext == ".js":
+        return "javascript"
+    if ext == ".jsx":
+        return "javascript"
+    if ext in (".ts", ".tsx"):
+        return "typescript"
     raise ValueError("Unsupported language")
 
 def classify_from_stderr(message: str, language: str = None) -> str:
@@ -111,6 +145,10 @@ def extract_errors_by_language(stderr: str, language: str):
         return extract_gcc_errors(stderr, language)
     elif language == "java":
         return extract_javac_errors(stderr)
+    elif language == "javascript":
+        return extract_node_errors(stderr)
+    elif language == "typescript":
+        return extract_tsc_errors(stderr)
     else:
         return []
 
@@ -143,6 +181,50 @@ def extract_javac_errors(stderr: str):
             })
 
     return errors
+
+def extract_node_errors(stderr: str):
+    """Extract errors from Node.js --check output (V8 error format)."""
+    errors = []
+    # V8 format: file:line — SyntaxError: message
+    pattern = r"^.*?:(\d+)\s*\n(.*?Error:\s*.*)$"
+    matches = re.findall(pattern, stderr, re.MULTILINE)
+
+    if matches:
+        for line_no, message in matches:
+            errors.append({
+                "error_type": classify_from_stderr(message, "javascript"),
+                "error": message.strip()
+            })
+    else:
+        # Fallback: capture any SyntaxError line
+        for line in stderr.splitlines():
+            if "SyntaxError" in line or "Error" in line:
+                errors.append({
+                    "error_type": classify_from_stderr(line, "javascript"),
+                    "error": line.strip()
+                })
+                break
+
+    return errors
+
+
+def extract_tsc_errors(stderr: str):
+    """Extract errors from tsc --noEmit output."""
+    errors = []
+    # tsc format: file(line,col): error TSxxxx: message
+    pattern = r"^.*?\(\d+,\d+\):\s*error\s+TS\d+:\s*(.*)$"
+
+    for line in stderr.splitlines():
+        match = re.match(pattern, line.strip())
+        if match:
+            message = match.group(1).strip()
+            errors.append({
+                "error_type": classify_from_stderr(message, "typescript"),
+                "error": message
+            })
+
+    return errors
+
 
 def standard_pass(language: str):
     return {
@@ -177,6 +259,28 @@ def compile_test(code: str, language: str):
                     "error_type": "SyntaxError",
                     "error": f"{e.msg} (<submitted_code>, line {e.lineno})"
                 }])
+
+        elif language == "javascript":
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".js") as tmp:
+                tmp.write(code.encode("utf-8"))
+                tmp_path = tmp.name
+            try:
+                run_compiler(tmp_path, language)
+                return standard_pass(language)
+            finally:
+                os.remove(tmp_path)
+
+        elif language == "typescript":
+            # For .tsx/.jsx-style code, determine suffix from context
+            suffix = ".ts"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(code.encode("utf-8"))
+                tmp_path = tmp.name
+            try:
+                run_compiler(tmp_path, language)
+                return standard_pass(language)
+            finally:
+                os.remove(tmp_path)
         
         else:
             with tempfile.NamedTemporaryFile(delete=False, suffix=language_extension(language)) as tmp:
@@ -241,11 +345,31 @@ def run_compiler(file_path: str, language: str):
             timeout = TIMEOUT_SEC
         )
 
+    elif language == "javascript":
+        subprocess.run(
+            ["node", "--check", file_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_SEC
+        )
+
+    elif language == "typescript":
+        subprocess.run(
+            ["tsc", "--noEmit", "--allowJs", "--esModuleInterop", file_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_SEC
+        )
+
 def language_extension(language: str):
     return {
         "c": ".c",
         "cpp": ".cpp",
-        "java": ".java"
+        "java": ".java",
+        "javascript": ".js",
+        "typescript": ".ts"
     }[language]
 
 # result_py = file_reader("Sample code 1.py")

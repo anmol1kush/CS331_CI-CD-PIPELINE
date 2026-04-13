@@ -20,6 +20,7 @@ class Environment:
         self.algorithm = algorithm
         self.max_iterations = max_iterations
         self.history = []
+        self.exploration_count = 0
 
     def run(self):
         if not self.algorithm:
