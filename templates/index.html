@@ -5,7 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI Test Runner - CI/CD</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+      .tabs-container {
+        margin: 20px 0;
+        border-bottom: 2px solid #ddd;
+      }
+      
+      .tabs {
+        display: flex;
+        gap: 10px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .tabs li {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .tabs button {
+        background: none;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        color: #666;
+        font-weight: 500;
+      }
+      
+      .tabs button:hover {
+        color: #007bff;
+      }
+      
+      .tabs button.active {
+        border-bottom-color: #007bff;
+        color: #007bff;
+      }
+      
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+      }
+      
+      .tab-content.active {
+        display: block;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .ci-info {
+        background: #f0f8ff;
+        border-left: 4px solid #007bff;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      }
+      
+      .ci-info h3 {
+        margin-top: 0;
+        color: #007bff;
+      }
+      
+      .ci-info ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+      
+      .ci-info li {
+        margin: 8px 0;
+      }
+      
+      .ci-button-container {
+        margin-top: 20px;
+      }
+      
+      .btn-ci {
+        background-color: #28a745;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      
+      .btn-ci:hover {
+        background-color: #218838;
+      }
+      
+      .btn-ci:disabled {
+        background-color: #999;
+        cursor: not-allowed;
+      }
+      
+      .ci-status {
+        margin-top: 15px;
+        padding: 15px;
+        background: #e8f5e9;
+        border: 1px solid #4caf50;
+        border-radius: 4px;
+        display: none;
+      }
+      
+      .ci-status.show {
+        display: block;
+      }
+    </style>
     <script>
+      function switchTab(tabName) {
+        // Hide all tab contents
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+        
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tabs button');
+        buttons.forEach(button => button.classList.remove('active'));
+        
+        // Show selected tab content
+        document.getElementById(tabName).classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+        
+        // Save preference to localStorage
+        localStorage.setItem('activeTab', tabName);
+      }
+      
       function showProgress(form) {
         // Show progress message
         const progressDiv = document.createElement('div');
@@ -28,11 +161,40 @@
         
         return true; // Allow form submission
       }
+      
+      function triggerCI() {
+        const button = event.target;
+        button.disabled = true;
+        button.innerText = '⏳ Triggering CI Pipeline...';
+        
+        // Show status message
+        const statusDiv = document.getElementById('ci-status');
+        statusDiv.innerHTML = '<p>🔄 Triggering GitHub Actions workflow...</p>';
+        statusDiv.classList.add('show');
+        
+        // Submit the form
+        document.getElementById('ci-form').submit();
+      }
+      
+      document.addEventListener('DOMContentLoaded', function() {
+        // Restore active tab from localStorage
+        const activeTab = localStorage.getItem('activeTab') || 'tab-ai-tester';
+        const tabButton = Array.from(document.querySelectorAll('.tabs button')).find(
+          btn => btn.onclick.toString().includes(activeTab)
+        );
+        
+        if (tabButton) {
+          tabButton.click();
+        } else {
+          // Fallback: click first tab
+          document.querySelector('.tabs button').click();
+        }
+      });
     </script>
   </head>
   <body>
     <header class="dashboard-header">
-      <h1>AI Test Runner</h1>
+      <h1>CI/CD Pipeline Management</h1>
       <div class="user-info">
         <span>Welcome, {{ current_user.name }} ({{ current_user.position }})</span>
         <a href="{{ url_for('settings') }}">Settings</a>
@@ -40,38 +202,79 @@
     </header>
     <main class="dashboard-main">
       <div class="upload-container">
-        <h2>AI-Powered Code Analysis</h2>
-        <p>Upload your code or select a sample to perform comprehensive AI analysis including test generation and bug detection.</p>
-        
-        <form method="post" enctype="multipart/form-data" onsubmit="return showProgress(this)" class="analysis-form">
-          <div class="form-section">
-            <h3>📁 Upload Code File</h3>
-            <div class="form-group">
-              <label for="file">Select a file to analyze:</label>
-              <input type="file" id="file" name="file" accept=".py,.c,.cpp,.java" required />
-              <small>Supported formats: Python (.py), C (.c), C++ (.cpp), Java (.java)</small>
-            </div>
-            <button type="submit" class="btn-primary">🚀 Start AI Analysis</button>
-          </div>
-        </form>
+        <!-- Tab Navigation -->
+        <div class="tabs-container">
+          <ul class="tabs">
+            <li><button class="active" onclick="switchTab('tab-ai-tester')">🤖 Run AI Tester</button></li>
+            <li><button onclick="switchTab('tab-run-ci')">⚙️ Run CI</button></li>
+          </ul>
+        </div>
 
-        {% if samples %}
-        <form method="post" onsubmit="return showProgress(this)" class="analysis-form">
-          <div class="form-section">
-            <h3>📚 Choose Sample Code</h3>
-            <div class="form-group">
-              <label for="sample">Select a sample file:</label>
-              <select name="sample" id="sample" required>
-                <option value="">-- Choose a sample --</option>
-                {% for s in samples %}
-                <option value="{{ s }}">{{ s }}</option>
-                {% endfor %}
-              </select>
+        <!-- AI Tester Tab -->
+        <div id="tab-ai-tester" class="tab-content active">
+          <h2>AI-Powered Code Analysis</h2>
+          <p>Upload your code or select a sample to perform comprehensive AI analysis including test generation and bug detection.</p>
+          
+          <form method="post" enctype="multipart/form-data" onsubmit="return showProgress(this)" class="analysis-form">
+            <div class="form-section">
+              <h3>📁 Upload Code File</h3>
+              <div class="form-group">
+                <label for="file">Select a file to analyze:</label>
+                <input type="file" id="file" name="file" accept=".py,.c,.cpp,.java" required />
+                <small>Supported formats: Python (.py), C (.c), C++ (.cpp), Java (.java)</small>
+              </div>
+              <button type="submit" class="btn-primary">🚀 Start AI Analysis</button>
             </div>
-            <button type="submit" class="btn-primary">🚀 Analyze Sample</button>
+          </form>
+
+          {% if samples %}
+          <form method="post" onsubmit="return showProgress(this)" class="analysis-form">
+            <div class="form-section">
+              <h3>📚 Choose Sample Code</h3>
+              <div class="form-group">
+                <label for="sample">Select a sample file:</label>
+                <select name="sample" id="sample" required>
+                  <option value="">-- Choose a sample --</option>
+                  {% for s in samples %}
+                  <option value="{{ s }}">{{ s }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn-primary">🚀 Analyze Sample</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+
+        <!-- Run CI Tab -->
+        <div id="tab-run-ci" class="tab-content">
+          <h2>Run CI/CD Pipeline</h2>
+          
+          <div class="ci-info">
+            <h3>🔄 GitHub Actions CI/CD Pipeline</h3>
+            <p>Trigger the automated CI/CD pipeline that will:</p>
+            <ul>
+              <li>Build the Docker image with your current code</li>
+              <li>Run unit and integration tests</li>
+              <li>Execute the AI-powered target code analysis on your TARGET_CODE folder</li>
+              <li>Upload results and code to TARGET_CODE/</li>
+              <li>Deploy the updated application to production</li>
+              <li>Push the image to DockerHub</li>
+              <li>Auto-deploy on Render</li>
+            </ul>
+            <p><strong>Note:</strong> This process may take 5-10 minutes. You can monitor progress in GitHub Actions.</p>
           </div>
-        </form>
-        {% endif %}
+
+          <form id="ci-form" method="post" action="{{ url_for('trigger_ci') }}">
+            <div class="ci-button-container">
+              <button type="button" class="btn-ci" onclick="triggerCI()">
+                ▶️ Trigger CI/CD Pipeline
+              </button>
+            </div>
+          </form>
+          
+          <div id="ci-status" class="ci-status"></div>
+        </div>
       </div>
     </main>
   </body>

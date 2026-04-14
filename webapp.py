@@ -122,7 +122,8 @@ def store_test_run(employee, test_type, filename, source_path, result, output, j
             'file_contents': file_contents,
             'created_at': datetime.utcnow()
         }
-        ai_tests_collection.insert_one(record)
+        if ai_tests_collection is not None:
+            ai_tests_collection.insert_one(record)
     except Exception as e:
         print(f"Warning: failed to store AI test run in MongoDB: {e}")
 
@@ -365,6 +366,65 @@ def settings():
     # Pre-fill name
     form.name.data = current_user.name
     return render_template('settings.html', form=form)
+
+
+@app.route("/trigger-ci", methods=["POST"])
+@login_required
+@csrf.exempt
+def trigger_ci():
+    """Trigger GitHub Actions workflow to run CI/CD pipeline"""
+    try:
+        # Get GitHub credentials from environment variables
+        github_token = os.environ.get('GITHUB_TOKEN')
+        github_repo = os.environ.get('GITHUB_REPO', 'your-username/your-repo')  # Format: owner/repo
+        workflow_file = os.environ.get('WORKFLOW_FILE', 'deploy.yml')
+        
+        if not github_token:
+            flash("GitHub token not configured. Please set GITHUB_TOKEN environment variable.")
+            return redirect(url_for("index"))
+        
+        # GitHub API endpoint to trigger workflow dispatch
+        url = f"https://api.github.com/repos/{github_repo}/actions/workflows/{workflow_file}/dispatches"
+        
+        headers = {
+            'Authorization': f'token {github_token}',
+            'Accept': 'application/vnd.github.v3+json'
+        }
+        
+        payload = {
+            'ref': 'main'  # Change to your main branch
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            flash("✓ CI/CD pipeline triggered successfully! Check GitHub Actions for progress.", "success")
+            # Store CI trigger event in database
+            if ai_tests_collection is not None:
+                ai_tests_collection.insert_one({
+                    'employee_id': current_user.employee_id,
+                    'username': current_user.username,
+                    'test_type': 'ci_trigger',
+                    'timestamp': datetime.now(),
+                    'status': 'triggered',
+                    'github_repo': github_repo,
+                    'workflow': workflow_file
+                })
+            print(f"✓ CI pipeline triggered by {current_user.username}")
+        else:
+            error_msg = f"Failed to trigger CI pipeline: {response.status_code} - {response.text}"
+            flash(error_msg, "error")
+            print(f"Error: {error_msg}")
+        
+        return redirect(url_for("index"))
+    
+    except requests.exceptions.Timeout:
+        flash("Request timeout while triggering CI pipeline. Please try again.", "error")
+        return redirect(url_for("index"))
+    except Exception as e:
+        flash(f"Error triggering CI pipeline: {str(e)}", "error")
+        print(f"Error: {str(e)}")
+        return redirect(url_for("index"))
 
 
 @app.route("/logout")

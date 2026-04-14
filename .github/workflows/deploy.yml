@@ -1,0 +1,49 @@
+name: Build and Test Target Code
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run AI Tester on Target Code
+      run: |
+        echo "Starting AI Tester on TARGET_CODE folder..."
+        python run_target_orchestrator.py
+      continue-on-error: true
+
+    - name: Upload results as artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: target-code-results
+        path: TARGET_CODE/
+        retention-days: 30
+
+    - name: Build Docker image
+      run: |
+        docker build -f Dockerfile.web -t cicd-pipeline:${{ github.sha }} .
+
+    - name: Workflow completed
+      run: |
+        echo "✓ CI pipeline completed successfully"
+        echo "✓ Results saved in TARGET_CODE/"
+        echo "✓ Docker image built: cicd-pipeline:${{ github.sha }}"

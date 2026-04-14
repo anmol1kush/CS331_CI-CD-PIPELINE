@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Testing Results - Target Code Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .metric-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .status-success {
+            color: #48bb78;
+        }
+
+        .status-error {
+            color: #f56565;
+        }
+
+        .status-warning {
+            color: #ed8936;
+        }
+
+        .files-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f7fafc;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AI Testing Results</h1>
+            <p>Comprehensive analysis results for your target code</p>
+        </div>
+
+        <div class="download-section">
+            <button class="download-btn" onclick="downloadResults()">
+                📥 Download Target Code & Results
+            </button>
+        </div>
+
+        {% if results.has_results %}
+        <div class="card">
+            <h2>📊 Pipeline Summary</h2>
+            <div class="results-grid">
+                {% for key, value in results.pipeline_summary.items() %}
+                <div class="result-card">
+                    <h3>{{ key.replace('_', ' ').title() }}</h3>
+                    {% if value is mapping %}
+                        {% for sub_key, sub_value in value.items() %}
+                        <div class="metric">
+                            <span class="metric-label">{{ sub_key.replace('_', ' ').title() }}:</span>
+                            <span class="metric-value {% if sub_value == 'PASS' %}status-success{% elif sub_value == 'FAIL' %}status-error{% else %}status-warning{% endif %}">
+                                {{ sub_value }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="metric">
+                            <span class="metric-label">Value:</span>
+                            <span class="metric-value">{{ value }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if results.target_code_files %}
+        <div class="card">
+            <h2>📁 Generated Files</h2>
+            <div class="files-list">
+                {% for file in results.target_code_files %}
+                <div class="file-item">
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">{{ file.size }} bytes</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="card">
+            <div class="no-results">
+                <h3>🔄 No Results Available</h3>
+                <p>Run the AI testing pipeline to generate results.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="actions">
+            <a href="/results" class="btn-secondary">📋 View Detailed Results</a>
+            <a href="/api/results" class="btn-secondary" target="_blank">🔗 JSON API</a>
+        </div>
+    </div>
+
+    <script>
+        function downloadResults() {
+            const link = document.createElement('a');
+            link.href = '/download';
+            link.download = 'target_code_results.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
