@@ -1,0 +1,83 @@
+.PHONY: help install dev stop clean logs backend frontend mongo
+
+# Colors
+BLUE := \033[0;34m
+GREEN := \033[0;32m
+RED := \033[0;31m
+NC := \033[0m
+
+help:
+	@echo "$(BLUE)CI/CD Pipeline - Development Commands$(NC)"
+	@echo ""
+	@echo "$(GREEN)make dev$(NC)              - Start all services (MongoDB, Backend, Frontend)"
+	@echo "$(GREEN)make install$(NC)          - Install dependencies for Backend and Frontend"
+	@echo "$(GREEN)make backend$(NC)          - Start only Backend (requires MongoDB running)"
+	@echo "$(GREEN)make frontend$(NC)         - Start only Frontend"
+	@echo "$(GREEN)make mongo$(NC)            - Start only MongoDB (Docker)"
+	@echo "$(GREEN)make stop$(NC)             - Stop all services"
+	@echo "$(GREEN)make clean$(NC)            - Remove node_modules and build files"
+	@echo "$(GREEN)make logs-backend$(NC)     - View Backend logs"
+	@echo "$(GREEN)make logs-frontend$(NC)    - View Frontend logs"
+	@echo ""
+	@echo "$(BLUE)Services:$(NC)"
+	@echo "  📱 Frontend: http://localhost:5173"
+	@echo "  🔧 Backend:  http://localhost:8000"
+	@echo "  🗄️  MongoDB:  mongodb://localhost:27017"
+
+install:
+	@echo "$(BLUE)Installing dependencies...$(NC)"
+	@cd Backend && npm install
+	@cd frontend && npm install
+	@echo "$(GREEN)✓ Dependencies installed$(NC)"
+
+dev: install mongo
+	@echo "$(BLUE)Starting all services...$(NC)"
+	@./run-dev.sh
+
+backend:
+	@echo "$(BLUE)Starting Backend on port 8000...$(NC)"
+	@cd Backend && PORT=8000 npm start
+
+frontend:
+	@echo "$(BLUE)Starting Frontend on port 5173...$(NC)"
+	@cd frontend && npm run dev
+
+mongo:
+	@echo "$(BLUE)Checking MongoDB...$(NC)"
+	@if command -v mongosh >/dev/null 2>&1 || command -v mongo >/dev/null 2>&1; then \
+		if mongosh --eval "db.adminCommand('ping')" --quiet 2>/dev/null; then \
+			echo "$(GREEN)✓ MongoDB is already running$(NC)"; \
+		else \
+			echo "$(BLUE)Starting MongoDB via Docker...$(NC)"; \
+			docker compose up mongo -d; \
+			sleep 2; \
+			echo "$(GREEN)✓ MongoDB started$(NC)"; \
+		fi \
+	else \
+		echo "$(BLUE)Starting MongoDB via Docker...$(NC)"; \
+		docker compose up mongo -d; \
+		sleep 2; \
+		echo "$(GREEN)✓ MongoDB started$(NC)"; \
+	fi
+
+stop:
+	@echo "$(BLUE)Stopping all services...$(NC)"
+	@pkill -f "npm start" || true
+	@pkill -f "npm run dev" || true
+	@docker compose down > /dev/null 2>&1 || true
+	@echo "$(GREEN)✓ All services stopped$(NC)"
+
+clean:
+	@echo "$(BLUE)Cleaning build artifacts...$(NC)"
+	@rm -rf Backend/node_modules Backend/dist
+	@rm -rf frontend/node_modules frontend/dist
+	@rm -rf .pycache __pycache__
+	@echo "$(GREEN)✓ Cleaned$(NC)"
+
+logs-backend:
+	@echo "$(BLUE)Backend running on port 8000...$(NC)"
+	@cd Backend && npm start
+
+logs-frontend:
+	@echo "$(BLUE)Frontend running on port 5173...$(NC)"
+	@cd frontend && npm run dev

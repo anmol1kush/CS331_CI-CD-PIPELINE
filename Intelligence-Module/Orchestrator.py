@@ -78,10 +78,30 @@ class Pipeline_Orchestrator:
         }
 
 if __name__ == "__main__":
-    #file_path = r"C:\Users\hp\Desktop\IIIT Guwahati\CS\CS331(SE LAB)\Stage1\Tests\LC Tests.py"
-    # file_path = r"C:\Users\hp\Desktop\IIIT Guwahati\CS\CS 201 (Algorithm)\Mid Sem Algo\Q2.cpp"
-    file_path = r"C:\Users\hp\Desktop\Leet Code\Optimised and Learnings\23 - Merge k sorted Lists.py"
-    #file_path = r"./Stage1/Tests/Test5.py"
+    import sys
+    
+    # Get file path from command line argument, environment variable, or default to uploads folder
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+    else:
+        # Look for the most recent file in uploads directory
+        uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
+        if os.path.exists(uploads_dir):
+            files = [os.path.join(uploads_dir, f) for f in os.listdir(uploads_dir) if os.path.isfile(os.path.join(uploads_dir, f))]
+            if files:
+                file_path = max(files, key=os.path.getctime)  # Get most recently created file
+            else:
+                print("Error: No files found in uploads directory")
+                sys.exit(1)
+        else:
+            print("Error: uploads directory not found")
+            sys.exit(1)
+
+    print(f"Processing file: {file_path}")
+    
+    if not os.path.exists(file_path):
+        print(f"Error: File not found: {file_path}")
+        sys.exit(1)
 
     pipeline = Pipeline_Orchestrator(file_path)
     result = pipeline.run_pipeline()

@@ -1,0 +1,134 @@
+.ci-trigger {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.trigger-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.trigger-header h2 {
+  color: #333;
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.trigger-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.trigger-section {
+  background: #f8f9ff;
+  border: 1px solid #667eea;
+  border-radius: 10px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.trigger-info h3 {
+  color: #333;
+  margin: 0 0 20px 0;
+  font-size: 20px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.trigger-actions {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.trigger-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.trigger-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.trigger-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.error-message h3 {
+  color: #c33;
+  margin: 0 0 10px 0;
+}
+
+.error-message p {
+  color: #c33;
+  margin: 0;
+}
+
+.trigger-result {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 5px;
+  padding: 20px;
+}
+
+.trigger-result h3 {
+  color: #155724;
+  margin: 0 0 20px 0;
+  font-size: 24px;
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.result-item strong {
+  color: #155724;
+  font-weight: 600;
+}
+
+.result-item a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.result-item a:hover {
+  text-decoration: underline;
+}
