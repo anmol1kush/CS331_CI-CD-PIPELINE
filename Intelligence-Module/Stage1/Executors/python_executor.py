@@ -17,7 +17,7 @@ from Stage1.Executors.executor_base import ExecutorBase
 
 class PythonExecutor(ExecutorBase):
 
-    def executecallable(self, source_code, tests):
+    def execute_callable(self, source_code, tests):
         results = []
         all_executed_lines = set()
 
@@ -35,7 +35,7 @@ class PythonExecutor(ExecutorBase):
 
         return results, all_executed_lines
 
-    def executestdin(self, source_code, tests):
+    def execute_stdin(self, source_code, tests):
         results = []
         all_executed_lines = set()
 
@@ -55,7 +55,7 @@ class PythonExecutor(ExecutorBase):
 
         return results, all_executed_lines
 
-    def executescript(self, source_code):
+    def execute_script(self, source_code):
         result = self.run_with_timeout(
             self.script_worker,
             (source_code,)

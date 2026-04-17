@@ -3,6 +3,7 @@ GEMINI MODEL PROVIDER
 """
 import os
 import time
+import random
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -54,8 +55,10 @@ class Gemini_Provider(Base_LLM_Provider):
 
                 if e.code in (429, 503):
                     wait = LLM_RETRY_DELAY ** (attempt + 1)
-                    print(f"    [Gemini] Waiting {wait}s before retry")
-                    time.sleep(wait)
+                    jitter = random.uniform(0, wait * 0.3)
+                    total_wait = wait + jitter
+                    print(f"    [Gemini] Waiting {total_wait:.1f}s before retry (attempt {attempt + 1}/{LLM_MAX_RETRIES})")
+                    time.sleep(total_wait)
                     continue
 
                 raise RuntimeError(f"Gemini API error: {e.message} (code: {e.code})")

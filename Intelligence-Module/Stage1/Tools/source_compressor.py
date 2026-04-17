@@ -214,12 +214,12 @@ class Source_Compressor:
             loop_type = loop.get("type", "?")
 
             if loop_type in ("for", "async_for"):
-                target = loop.get("target", "?")
-                iterator = loop.get("iterator", "?")
+                target = loop.get("target") or "?"
+                iterator = loop.get("iterator") or "?"
                 prefix = "async for" if loop_type == "async_for" else "for"
                 lines.append(f"  L{line}: {prefix} {target} in {iterator}")
             elif loop_type == "while":
-                condition = loop.get("condition", "?")
+                condition = loop.get("condition") or "?"
                 lines.append(f"  L{line}: while {condition}")
 
         return "\n".join(lines)
@@ -381,9 +381,9 @@ class Source_Compressor:
 
                 # 3. Size/iteration hints from loop bounds
                 for loop in loops:
-                    iterator = loop.get("iterator", "")
-                    target = loop.get("target", "")
-                    condition = loop.get("condition", "")
+                    iterator = loop.get("iterator") or ""
+                    target = loop.get("target") or ""
+                    condition = loop.get("condition") or ""
 
                     # Parameter used as iterator → likely collection
                     if pname in iterator or pname == iterator:
