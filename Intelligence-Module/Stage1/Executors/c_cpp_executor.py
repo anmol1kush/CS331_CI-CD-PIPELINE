@@ -21,7 +21,7 @@ class CCppExecutor(ExecutorBase):
         self.compiler = "gcc" if language == "c" else "g++"
         self.suffix = ".c" if language == "c" else ".cpp"
 
-    def executecallable(self, sourcecode, tests):
+    def execute_callable(self, source_code, tests):
         """
         C/C++ callable mode: wrap source with a main() that calls the function.
         """
@@ -32,8 +32,8 @@ class CCppExecutor(ExecutorBase):
             method_name = test.get("method_name")
             test_input = test.get("input", [])
 
-            wrapper = self.buildcallable_wrapper(sourcecode, method_name, test_input)
-            result = self.compile_andrun(wrapper)
+            wrapper = self.buildcallable_wrapper(source_code, method_name, test_input)
+            result = self.compile_and_run(wrapper)
             result["test_id"] = ind
 
             per_test_lines = result.pop("executed_lines", set())
@@ -43,12 +43,12 @@ class CCppExecutor(ExecutorBase):
 
         return results, all_executed_lines
 
-    def execute_stdin(self, sourcecode, tests):
+    def execute_stdin(self, source_code, tests):
         results = []
         all_executed_lines = set()
 
         # Compile once, run multiple times
-        binary_path = self.compile(sourcecode)
+        binary_path = self.compile(source_code)
         if binary_path is None:
             for ind, test in enumerate(tests):
                 results.append({
@@ -78,8 +78,8 @@ class CCppExecutor(ExecutorBase):
 
         return results, all_executed_lines
 
-    def execute_script(self, sourcecode):
-        result = self.compile_andrun(sourcecode)
+    def execute_script(self, source_code):
+        result = self.compile_and_run(source_code)
         result["test_id"] = 0
 
         per_test_lines = result.pop("executed_lines", set())
@@ -87,7 +87,7 @@ class CCppExecutor(ExecutorBase):
 
         return [result], per_test_lines
 
-    def buildcallable_wrapper(self, sourcecode, method_name, test_input):
+    def buildcallable_wrapper(self, source_code, method_name, test_input):
         """Build a C/C++ wrapper with main() that calls the target function."""
         args_str = ", ".join(self.c_literal(arg) for arg in test_input)
 
@@ -95,7 +95,7 @@ class CCppExecutor(ExecutorBase):
 #include <stdio.h>
 #include <stdlib.h>
 
-{sourcecode}
+{source_code}
 
 int main() {{
     printf("%d\\n", {method_name}({args_str}));
@@ -207,7 +207,7 @@ int main() {{
                 "called_operations": []
             }
 
-    def compile_andrun(self, code, stdin_input=None):
+    def compile_and_run(self, code, stdin_input=None):
         """Compile and run in one step."""
         start = time.time()
         binary_path = self.compile(code)
