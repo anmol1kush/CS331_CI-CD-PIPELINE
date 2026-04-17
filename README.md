@@ -73,7 +73,7 @@ Files uploaded via the web UI are stored in an `uploads/` folder created automat
 
 ## Authentication
 
-The web UI now requires authentication. Users can sign up as Admin or Developer. Credentials are stored in the PostgreSQL database (or SQLite for local testing).
+The web UI now requires authentication. Users can sign up as Admin or Developer. Credentials are stored in MongoDB, and AI test runs are also stored in MongoDB.
 
 - **Sign Up:** Create an account with employee ID, name, position (admin/developer), and password.
 - **Sign In:** Log in with employee ID and password.
@@ -112,7 +112,6 @@ The Intelligence Module provides advanced AI-powered testing capabilities using 
 - **Flask**: Web framework
 - **Flask-Login**: User session management
 - **Flask-WTF**: Form handling
-- **Flask-SQLAlchemy**: Database ORM
 - **WTForms**: Form validation
 - **bcrypt**: Password hashing
 - **pymongo**: MongoDB driver
@@ -122,28 +121,35 @@ The Intelligence Module provides advanced AI-powered testing capabilities using 
 - **docker**: Docker API client
 
 ### External Services
-- **MongoDB**: For storing webhook data and AI test results
-- **PostgreSQL**: For user authentication (optional, SQLite for local dev)
+- **MongoDB**: For user authentication, uploaded file metadata, AI test results, and webhook storage
 - **Google Gemini API**: For AI-powered test generation
 
 ### Environment Variables
-Create a `.env` file in the project root:
+Create a `.env` file in the project root based on `.env.example`:
 ```
 GEMINI_API_KEY=your_gemini_api_key_here
+MONGO_URI=your_mongodb_connection_string_here
+MONGODB_URI=your_mongodb_connection_string_here
+GITHUB_TOKEN=your_github_token_here
+GITHUB_REPO_OWNER=your_github_owner_here
+GITHUB_REPO_NAME=your_github_repo_here
+WORKFLOW_FILE=ci.yml
 ```
 
-Copy from `Intelligence-Module/.env` or set your own API key.
+Copy from `.env.example` and set your own values, but do not commit `.env`.
 
 ## 🧪 Testing the Setup
 
-### 1. Local Testing (SQLite):
+### 1. Local Testing (MongoDB):
 ```bash
 source cicd/bin/activate
+cp .env.example .env
+# edit .env to add your real connection string and keys
 python webapp.py
 ```
 Open http://localhost:5000, sign up, then log in to access the dashboard.
 
-### 2. Docker Testing (PostgreSQL):
+### 2. Docker Testing (MongoDB):
 ```bash
 docker compose up --build
 ```
