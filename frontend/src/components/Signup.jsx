@@ -42,7 +42,7 @@ function Signup({ onLogin }) {
         onLogin(data.user, data.token);
         navigate("/");
       } else {
-        setError(data.message || "Signup failed");
+        setError(data.error || "Signup failed");
       }
     } catch (err) {
       setError("Network error. Please try again.");

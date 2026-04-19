@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codes for Sale</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Codes for Sale</h1>
+        <p class="subtitle">Available source files</p>
+
+        <div class="cards">
+            {% for file in files %}
+            <div class="card">
+                <h2>{{ file.name }}</h2>
+                <p>Size: {{ file.size }} KB</p>
+                <a href="/download/{{ file.name }}" class="btn">
+                    Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>

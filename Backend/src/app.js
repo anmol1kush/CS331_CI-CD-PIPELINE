@@ -101,7 +101,7 @@ app.post("/auth/signup", async (req, res) => {
     }
 
     const existingUser = await User.findOne({ username });
-
+    console.log(existingUser);
     if (existingUser) {
       return res.status(409).json({ error: "Username already exists" });
     }
