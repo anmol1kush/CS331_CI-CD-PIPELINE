@@ -460,7 +460,66 @@ function readPipelineSummary(outputDir) {
   if (!fs.existsSync(summaryPath)) {
     return {};
   }
-  return JSON.parse(fs.readFileSync(summaryPath, "utf-8"));
+  try {
+    return JSON.parse(fs.readFileSync(summaryPath, "utf-8"));
+  } catch (error) {
+    console.error(`Failed to parse pipeline summary at ${summaryPath}:`, error.message);
+    return {};
+  }
+}
+
+function cleanWorkflowLogText(value) {
+  return String(value)
+    .replace(/\u001b\[[0-9;]*m/g, "")
+    .replace(/\r/g, "")
+    .trim();
+}
+
+function trimWorkflowLogText(value, maxLines = 250, maxChars = 20000) {
+  const cleaned = cleanWorkflowLogText(value);
+  const lines = cleaned.split("\n");
+  const tailLines = lines.slice(-maxLines).join("\n");
+  if (tailLines.length <= maxChars) {
+    return tailLines;
+  }
+  return tailLines.slice(-maxChars);
+}
+
+async function fetchJobLogSnippet(owner, name, jobId, token) {
+  try {
+    const response = await axios.get(
+      `https://api.github.com/repos/${owner}/${name}/actions/jobs/${jobId}/logs`,
+      {
+        headers: githubHeaders(token),
+        responseType: "text",
+        maxRedirects: 5,
+      }
+    );
+
+    const fullText =
+      typeof response.data === "string"
+        ? response.data
+        : Buffer.isBuffer(response.data)
+          ? response.data.toString("utf-8")
+          : String(response.data ?? "");
+
+    const trimmed = trimWorkflowLogText(fullText);
+    return {
+      available: Boolean(trimmed),
+      text: trimmed,
+      truncated: cleanWorkflowLogText(fullText).length > trimmed.length,
+    };
+  } catch (error) {
+    const status = error.response?.status;
+    return {
+      available: false,
+      text:
+        status === 404
+          ? "Logs are not available for this job yet."
+          : "Unable to load logs for this job right now.",
+      truncated: false,
+    };
+  }
 }
 
 async function fetchLatestPipelineResultsFromArtifact() {
@@ -1015,15 +1074,21 @@ app.get("/pipeline-run-details", async (req, res) => {
     );
 
     const rawJobs = jobsRes.data.jobs || [];
-    const jobs = rawJobs.map((j) => ({
-      id: j.id,
-      name: j.name,
-      status: j.status,
-      conclusion: j.conclusion,
-      startedAt: j.started_at,
-      completedAt: j.completed_at,
-      htmlUrl: j.html_url,
-    }));
+    const jobs = await Promise.all(
+      rawJobs.map(async (j) => {
+        const logs = await fetchJobLogSnippet(owner, name, j.id, token);
+        return {
+          id: j.id,
+          name: j.name,
+          status: j.status,
+          conclusion: j.conclusion,
+          startedAt: j.started_at,
+          completedAt: j.completed_at,
+          htmlUrl: j.html_url,
+          logs,
+        };
+      })
+    );
 
     const workflowComplete = r.status === "completed";
     const allJobsComplete =

@@ -63,10 +63,13 @@ export default function PipelineActionsView() {
 
   useEffect(() => {
     let cancelled = false;
+    const token = localStorage.getItem("token");
 
     const load = async () => {
       try {
-        const res = await fetch(`${API_BASE}/pipeline-run-details`);
+        const res = await fetch(`${API_BASE}/pipeline-run-details`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         const json = await res.json();
         if (cancelled) return;
         if (!res.ok) {
@@ -149,6 +152,12 @@ export default function PipelineActionsView() {
 
       <div className="pa-jobs-head">Jobs</div>
 
+      <div className="pa-log-banner">
+        {run.status === "in_progress" || run.status === "queued"
+          ? "Live workflow feed is refreshing automatically."
+          : "Latest workflow logs from GitHub Actions."}
+      </div>
+
       {jobs.length === 0 ? (
         <div className="pa-empty">
           {run.status === "queued" || run.status === "in_progress"
@@ -157,22 +166,34 @@ export default function PipelineActionsView() {
         </div>
       ) : (
         jobs.map((job) => (
-          <a
-            key={job.id}
-            className="pa-job-row"
-            href={job.htmlUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <JobStatusIcon status={job.status} conclusion={job.conclusion} />
-            <span className="pa-job-name">{job.name}</span>
-            <span className="pa-job-state">
-              {job.status === "completed" && job.conclusion
-                ? job.conclusion.replace(/_/g, " ")
-                : job.status.replace(/_/g, " ")}
-            </span>
-          </a>
-        ))
+          <React.Fragment key={job.id}>
+            <a
+              className="pa-job-row"
+              href={job.htmlUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <JobStatusIcon status={job.status} conclusion={job.conclusion} />
+              <span className="pa-job-name">{job.name}</span>
+              <span className="pa-job-state">
+                {job.status === "completed" && job.conclusion
+                  ? job.conclusion.replace(/_/g, " ")
+                  : job.status.replace(/_/g, " ")}
+              </span>
+            </a>
+            <div className="pa-job-logs-wrap">
+              <div className="pa-job-logs-head">
+                <span>{job.name} logs</span>
+                <span className="pa-job-logs-meta">
+                  {job.logs?.truncated ? "Showing latest lines" : "Latest output"}
+                </span>
+              </div>
+              <pre className="pa-job-logs">
+                {job.logs?.text || "Logs are not available yet."}
+              </pre>
+            </div>
+          </React.Fragment>
+        )
       )}
 
       {showFollowUp ? (

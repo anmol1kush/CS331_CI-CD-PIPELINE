@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -45,6 +46,36 @@ def sanitize_name(value: str) -> str:
     safe = "".join(ch if ch.isalnum() or ch in {"-", "_", "."} else "-" for ch in value)
     safe = safe.strip("-._")
     return safe or "item"
+
+
+def make_json_safe(value):
+    if isinstance(value, dict):
+        return {str(key): make_json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [make_json_safe(item) for item in value]
+    if isinstance(value, set):
+        return [make_json_safe(item) for item in sorted(value, key=lambda item: repr(item))]
+    if isinstance(value, Path):
+        return str(value)
+    return value
+
+
+def write_json_atomic(target_path: Path, payload) -> None:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    safe_payload = make_json_safe(payload)
+
+    with tempfile.NamedTemporaryFile(
+        "w",
+        encoding="utf-8",
+        dir=target_path.parent,
+        delete=False,
+    ) as handle:
+        json.dump(safe_payload, handle, indent=2)
+        handle.flush()
+        os.fsync(handle.fileno())
+        temp_path = Path(handle.name)
+
+    temp_path.replace(target_path)
 
 
 def collect_supported_files(targets: list[str]) -> list[Path]:
@@ -271,14 +302,12 @@ class Pipeline_Orchestrator:
         files_dir = output_path / "files"
         files_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path / "pipeline_results_summary.json", "w", encoding="utf-8") as handle:
-            json.dump(summary, handle, indent=2)
+        write_json_atomic(output_path / "pipeline_results_summary.json", summary)
 
         for index, file_result in enumerate(summary["results"], start=1):
             label = sanitize_name(file_result.get("file_path", f"file-{index}"))
             detail_path = files_dir / f"{index:03d}-{label}.json"
-            with open(detail_path, "w", encoding="utf-8") as handle:
-                json.dump(file_result, handle, indent=2)
+            write_json_atomic(detail_path, file_result)
 
 
 def build_cli_parser() -> argparse.ArgumentParser:
