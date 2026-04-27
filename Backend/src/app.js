@@ -881,16 +881,39 @@ app.get("/samples", authenticateToken, async (req, res) => {
 // Admin routes
 app.get("/admin/users", authenticateToken, async (req, res) => {
   try {
-    // Check if user is admin
     if (req.user.position !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
 
     const users = await User.find({}, '-passwordHash').sort({ createdAt: -1 });
-    res.json(users);
+    res.json({ users });
   } catch (error) {
     console.error("Get users error:", error);
     res.status(500).json({ error: "Failed to get users" });
+  }
+});
+
+app.delete("/admin/users/:id", authenticateToken, async (req, res) => {
+  try {
+    if (req.user.position !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const userToDelete = await User.findById(req.params.id);
+    if (!userToDelete) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (userToDelete.position === "admin") {
+      return res.status(400).json({ error: "Admin accounts cannot be removed" });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Employee removed successfully" });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Failed to remove employee" });
   }
 });
 

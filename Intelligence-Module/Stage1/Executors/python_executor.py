@@ -17,7 +17,7 @@ from Stage1.Executors.executor_base import ExecutorBase
 
 class PythonExecutor(ExecutorBase):
 
-    def execute_callable(self, source_code, tests):
+    def execute_callable(self, source_code, tests, structural_features=None):
         results = []
         all_executed_lines = set()
 

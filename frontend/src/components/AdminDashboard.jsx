@@ -5,77 +5,86 @@ import "./AdminDashboard.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } }
-};
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
-};
-
-const ROLE_CLASS   = { admin: "pos-admin", manager: "pos-manager", developer: "pos-developer" };
-const RESULT_BADGE = { pass: "badge-success", fail: "badge-danger", error: "badge-danger", warning: "badge-warning" };
-
-const IconUsers = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-);
-const IconFlask = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 3h6M10 3v6l-4 9a1 1 0 0 0 .9 1.4h10.2a1 1 0 0 0 .9-1.4l-4-9V3"/>
-  </svg>
-);
-const IconCode = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-  </svg>
-);
-const IconShield = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-  </svg>
-);
-const IconAlert = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <triangle points="10.29 3.86 1.82 18 22.18 18"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-);
-
-function AdminDashboard({ user, onLogout }) {
-  const [users, setUsers]   = useState([]);
-  const [tests, setTests]   = useState([]);
+function AdminDashboard({ onLogout }) {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState("");
+  const [removingUserId, setRemovingUserId] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     setLoading(true);
+    setError("");
     try {
       const token = localStorage.getItem("token");
-      const [usersRes, testsRes] = await Promise.all([
-        fetch(`${API_BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_BASE}/admin/tests`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-      if (usersRes.ok && testsRes.ok) {
-        const ud = await usersRes.json();
-        const td = await testsRes.json();
-        setUsers(ud.users || []);
-        setTests(td.tests || []);
-      } else setError("Failed to fetch admin data");
-    } catch { setError("Network error"); }
-    finally { setLoading(false); }
+      const usersRes = await fetch(`${API_BASE}/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!usersRes.ok) {
+        const data = await usersRes.json().catch(() => ({}));
+        setUsers([]);
+        setError(data.error || "Failed to fetch employees");
+        return;
+      }
+
+      const usersData = await usersRes.json();
+      setUsers(usersData.users || []);
+    } catch {
+      setError("Network error");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const statCards = [
-    { Icon: IconUsers,  label: "Total Users",  value: users.length,                                         bg: "rgba(124,92,252,0.12)",  color: "#7c5cfc" },
-    { Icon: IconFlask,  label: "Total Tests",  value: tests.length,                                         bg: "rgba(6,199,225,0.12)",   color: "#06c7e1" },
-    { Icon: IconCode,   label: "Developers",   value: users.filter(u => u.position === "developer").length, bg: "rgba(34,211,160,0.12)",  color: "#22d3a0" },
-    { Icon: IconShield, label: "Admins",       value: users.filter(u => u.position === "admin").length,     bg: "rgba(245,158,11,0.12)",  color: "#f59e0b" },
-  ];
+  const handleRemoveEmployee = async (employee) => {
+    if (employee.position === "admin") {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Remove ${employee.name} (${employee.employeeId}) from the database?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setRemovingUserId(employee._id);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/admin/users/${employee._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(data.error || "Failed to remove employee");
+        return;
+      }
+
+      setUsers((currentUsers) =>
+        currentUsers.filter((currentUser) => currentUser._id !== employee._id)
+      );
+    } catch {
+      setError("Network error");
+    } finally {
+      setRemovingUserId("");
+    }
+  };
+
+  const handleLogout = () => {
+    onLogout();
+  };
+
+  const employeeUsers = users.filter((listedUser) => listedUser.position !== "admin");
+  const adminUsers = users.filter((listedUser) => listedUser.position === "admin");
 
   if (loading) {
     return (
@@ -87,100 +96,82 @@ function AdminDashboard({ user, onLogout }) {
   }
 
   return (
-    <div className="admin-page">
-      <Navbar user={user} onLogout={onLogout} />
+    <div className="admin-dashboard">
+      <header className="admin-header">
+        <div className="header-content">
+          <h1>Admin Dashboard</h1>
+          <div className="header-actions">
+            <Link to="/" className="back-link">Back to Dashboard</Link>
+            <Link to="/settings" className="settings-link">Settings</Link>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
+          </div>
+        </div>
+      </header>
 
-      <div className="admin-body">
-        <motion.div
-          className="admin-header-section"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h2><span className="text-gradient">Admin Dashboard</span></h2>
-          <p>Manage users, monitor tests, and oversee your CI/CD pipeline.</p>
-        </motion.div>
+      <div className="admin-content">
+        {error && <div className="error-message">{error}</div>}
 
-        {error && (
-          <motion.div className="auth-error" style={{ marginBottom: 24 }}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <IconAlert /> {error}
-          </motion.div>
-        )}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <h3>Total Users</h3>
+            <div className="stat-number">{users.length}</div>
+          </div>
+          <div className="stat-card">
+            <h3>Total Employees</h3>
+            <div className="stat-number">{employeeUsers.length}</div>
+          </div>
+          <div className="stat-card">
+            <h3>Admin Users</h3>
+            <div className="stat-number">{adminUsers.length}</div>
+          </div>
+        </div>
 
-        {/* Stat Cards */}
-        <motion.div
-          className="admin-stats-grid"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {statCards.map((s) => (
-            <motion.div key={s.label} className="admin-stat-card" variants={itemVariants}>
-              <div className="admin-stat-header">
-                <div className="admin-stat-icon" style={{ background: s.bg, color: s.color }}>
-                  <s.Icon />
-                </div>
-                <span className="badge badge-accent">&uarr;</span>
-              </div>
-              <div className="admin-stat-number" style={{ color: s.color }}>{s.value}</div>
-              <div className="admin-stat-label">{s.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Tables */}
-        <div className="admin-sections">
-          {/* Users Table */}
-          <motion.div
-            className="admin-section"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="admin-section-header">
-              <div className="admin-section-title">User Management</div>
-              <span className="badge badge-info">{users.length} users</span>
-            </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Employee ID</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.length === 0 ? (
-                  <tr><td colSpan={5} className="table-no-data">No users found</td></tr>
-                ) : users.map((u) => (
-                  <tr key={u._id}>
-                    <td style={{ fontWeight: 600, color: "var(--text-primary)" }}>{u.username}</td>
-                    <td>{u.name}</td>
-                    <td>
-                      <span className={`pos-badge ${ROLE_CLASS[u.position] || ""}`}>
-                        {u.position}
-                      </span>
-                    </td>
-                    <td style={{ fontFamily: "monospace", fontSize: 12 }}>{u.employeeId || "—"}</td>
-                    <td>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}</td>
+        <div className="data-section">
+          <div className="section">
+            <h2>Employee Management</h2>
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Employee ID</th>
+                    <th>Created</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-
-          {/* Tests Table */}
-          <motion.div
-            className="admin-section"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-          >
-            <div className="admin-section-header">
-              <div className="admin-section-title">Recent AI Tests</div>
-              <span className="badge badge-accent">{tests.length} runs</span>
+                </thead>
+                <tbody>
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="empty-state">No employees found.</td>
+                    </tr>
+                  )}
+                  {users.map((listedUser) => (
+                    <tr key={listedUser._id}>
+                      <td>{listedUser.username}</td>
+                      <td>{listedUser.name}</td>
+                      <td>{listedUser.position}</td>
+                      <td>{listedUser.employeeId}</td>
+                      <td>{new Date(listedUser.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        {listedUser.position === "admin" ? (
+                          <span className="protected-badge">Protected</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="remove-btn"
+                            onClick={() => handleRemoveEmployee(listedUser)}
+                            disabled={removingUserId === listedUser._id}
+                          >
+                            {removingUserId === listedUser._id ? "Removing..." : "Remove"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
             <table className="data-table">
               <thead>

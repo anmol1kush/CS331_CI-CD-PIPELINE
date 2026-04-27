@@ -16,6 +16,7 @@ import json
 import time
 from Stage1.config import TEST_TIMEOUT
 from Stage1.Executors.executor_base import ExecutorBase
+from Stage1.Executors.type_marshaller import get_marshalling
 
 
 class JSTSExecutor(ExecutorBase):
@@ -26,7 +27,7 @@ class JSTSExecutor(ExecutorBase):
         # TS needs transpilation before execution
         self.needs_transpile = language == "typescript"
 
-    def execute_callable(self, source_code, tests):
+    def execute_callable(self, source_code, tests, structural_features=None):
         results = []
         all_executed_lines = set()
 
@@ -34,9 +35,17 @@ class JSTSExecutor(ExecutorBase):
             method_name = test.get("method_name")
             test_input = test.get("input", [])
 
-            # Build a wrapper that requires the source and calls the method
-            input_json = json.dumps(test_input)
-            wrapper = self.build_callable_wrapper(source_code, method_name, input_json)
+            marshalling = get_marshalling(
+                source_code, structural_features, method_name, test_input, self.language
+            )
+
+            if marshalling["needs_marshalling"]:
+                wrapper = self._build_marshalled_wrapper(
+                    source_code, method_name, test_input, marshalling
+                )
+            else:
+                input_json = json.dumps(test_input)
+                wrapper = self.build_callable_wrapper(source_code, method_name, input_json)
 
             result = self.run_node(wrapper)
             result["test_id"] = ind
@@ -98,6 +107,36 @@ try {{
         }}
     }}
     console.log(JSON.stringify(result));
+}} catch (e) {{
+    console.error("__EXCEPTION__:" + e.message);
+    process.exit(1);
+}}
+"""
+
+    def _build_marshalled_wrapper(self, source_code, method_name, test_input, marshalling):
+        """Build a JS wrapper with type marshalling for complex types."""
+        helper_code = marshalling["helper_code"]
+        arg_exprs = marshalling["arg_expressions"]
+        output_ser = marshalling["output_serializer"]
+        args_call = ", ".join(arg_exprs)
+
+        return f"""
+// --- Source code ---
+{source_code}
+
+// --- Marshalling helpers ---
+{helper_code}
+
+// --- Test harness ---
+try {{
+    let result;
+    if (typeof Solution !== 'undefined') {{
+        const instance = new Solution();
+        result = instance.{method_name}({args_call});
+    }} else if (typeof {method_name} === 'function') {{
+        result = {method_name}({args_call});
+    }}
+    console.log(JSON.stringify({output_ser}(result)));
 }} catch (e) {{
     console.error("__EXCEPTION__:" + e.message);
     process.exit(1);

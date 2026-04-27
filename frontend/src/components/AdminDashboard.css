@@ -149,55 +149,67 @@
 }
 
 .data-table th {
-  padding: 11px 24px;
-  text-align: left;
-  font-size: 11px;
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.data-table tr:hover {
+  background: #f8f9ff;
+}
+
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #fcc;
+}
+
+.remove-btn {
+  background: #c0392b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.remove-btn:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.remove-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.protected-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e9ecef;
+  color: #495057;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  letter-spacing: 0.9px;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
 }
 
-.data-table td {
-  padding: 13px 24px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-  vertical-align: middle;
-}
-
-.data-table tr:last-child td { border-bottom: none; }
-
-.data-table tbody tr:hover td {
-  background: var(--glass);
-  color: var(--text-primary);
-}
-
-.table-no-data {
+.empty-state {
   text-align: center;
-  color: var(--text-muted);
+  color: #666;
   font-style: italic;
-  font-size: 13px;
-  padding: 40px 24px;
 }
 
 /* ── Role Badges ────────────────────────────────────────── */
 .pos-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
-  letter-spacing: 0.3px;
-  border: 1px solid transparent;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
 }
-
-.pos-admin    { background: rgba(124,92,252,0.15); color: var(--accent);   border-color: rgba(124,92,252,0.25); }
-.pos-manager  { background: rgba(245,158,11,0.15); color: var(--warning);  border-color: rgba(245,158,11,0.25); }
-.pos-developer { background: rgba(34,211,160,0.15); color: var(--success); border-color: rgba(34,211,160,0.25); }
