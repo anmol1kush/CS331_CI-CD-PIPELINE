@@ -1,5 +1,6 @@
 """
 LLM-based Tests Generator for Stage-1.
+LLM-based Tests Generator for Stage-1.
 
 Generates test cases by prompting an LLM with the source code
 and structural context from the Semantic Engine.
@@ -15,6 +16,7 @@ Responsibilities:
 - Return structured test objects
 
 Tests object contract (callable_method):
+Tests object contract (callable_method):
 {
     "strategy": str,
     "method_name": str,
@@ -23,6 +25,7 @@ Tests object contract (callable_method):
 }
 
 Tests object contract (stdin_program):
+Tests object contract (stdin_program):
 {
     "strategy": str,
     "method_name": None,
@@ -30,6 +33,7 @@ Tests object contract (stdin_program):
     "expected_output": any
 }
 
+Tests object contract (script):
 Tests object contract (script):
 {
     "strategy": str,
@@ -42,6 +46,15 @@ NOTE:
 The LLM is responsible for identifying the correct entry method.
 test_executor.py validates the method exists but does not
 perform method detection.
+"""
+
+"""
+-> STRESS = "stress"
+-> CONSTRAINT = "constraint"
+
+the abv to be kept at hold as we req confirmation on the ip type to Intelligent Module
+(Source Code only
+or Source + Constraint File)
 """
 
 """
@@ -137,6 +150,13 @@ Strategy: {strategy}
 
 Generate at most {MAX_TESTS_PER_CALL} test cases.
 Each test must follow this JSON format:
+{format_block}
+
+Comparison mode rules:
+- "exact": output must match exactly (default for most problems)
+- "unordered": list output where outer order does not matter (e.g., twoSum returns [0,1] or [1,0])
+- "unordered_nested": nested list where both inner and outer order do not matter (e.g., threeSum, subsets)
+- "float_tolerance": numeric output where minor floating point difference is acceptable (e.g., division, averages)
 {format_block}
 
 Comparison mode rules:
@@ -285,9 +305,18 @@ Rules:
         if not isinstance(data, list):
             raise ValueError("LLM response is not a JSON list")
 
+        if not isinstance(data, list):
+            raise ValueError("LLM response is not a JSON list")
+
         normalized_tests = []
 
         for test in data:
+            if not isinstance(test, dict):
+                continue
+
+            if not self.validate_test(test,execution_model):
+                continue
+
             if not isinstance(test, dict):
                 continue
 
@@ -301,10 +330,33 @@ Rules:
                     "input": test.get("input"),
                     "expected_output": test.get("expected_output"),
                     "comparison_mode": test.get("comparison_mode", "exact")
+                    "expected_output": test.get("expected_output"),
+                    "comparison_mode": test.get("comparison_mode", "exact")
                 }
             )
 
         return normalized_tests
+
+    def validate_test(self, test, execution_model):
+        if execution_model == "callable_method":
+            method_name = test.get("method_name")
+            if not isinstance(method_name, str) or not method_name:
+                return False
+            if not isinstance(test.get("input"), list):
+                return False
+
+        elif execution_model == "stdin_program":
+            if test.get("method_name") is not None:
+                return False
+            if not isinstance(test.get("input"), str):
+                return False
+
+        elif execution_model == "script":
+            if test.get("method_name") is not None:
+                return False
+
+        return True
+
 
     def validate_test(self, test, execution_model):
         if execution_model == "callable_method":

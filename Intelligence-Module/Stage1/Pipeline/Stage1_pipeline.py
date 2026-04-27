@@ -34,8 +34,10 @@ def run_stage1(stage0_result: dict, source_code: str, user_context: str = None):
     env = Environment(state, algorithm, max_iterations=MAX_ITERATIONS)
 
     # Run Agent Loop
+    # Run Agent Loop
     final_state = env.run()
 
+    # Build Stage-1 Output
     # Build Stage-1 Output
     stage1_output = {
         "stage": 1,
@@ -52,6 +54,8 @@ def run_stage1(stage0_result: dict, source_code: str, user_context: str = None):
             "failures": final_state.failures,
             "incorrect_outputs": final_state.incorrect_outputs
         },
+        "executed_tests": final_state.executed_tests,
+        "generated_test_cases": final_state.generated_tests
         "executed_tests": final_state.executed_tests,
         "generated_test_cases": final_state.generated_tests
     }

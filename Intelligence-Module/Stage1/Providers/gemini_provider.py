@@ -39,16 +39,26 @@ class Gemini_Provider(Base_LLM_Provider):
                 )
 
                 try:
+                try:
                     raw_text = response.text
+                except Exception as e:
+                    raise RuntimeError(f"Gemini response has no text: {str(e)}")
                 except Exception as e:
                     raise RuntimeError(f"Gemini response has no text: {str(e)}")
 
                 if not raw_text:
                     raise RuntimeError("Gemini returned empty response")
+                if not raw_text:
+                    raise RuntimeError("Gemini returned empty response")
 
                 print(f"    [Gemini] Response received ({len(raw_text)} chars)")
                 return raw_text
+                print(f"    [Gemini] Response received ({len(raw_text)} chars)")
+                return raw_text
 
+            except APIError as e:
+                last_error = e
+                print(f"    [Gemini] API error: {e.code} — retrying...")
             except APIError as e:
                 last_error = e
                 print(f"    [Gemini] API error: {e.code} — retrying...")
@@ -62,6 +72,7 @@ class Gemini_Provider(Base_LLM_Provider):
                     continue
 
                 raise RuntimeError(f"Gemini API error: {e.message} (code: {e.code})")
+                raise RuntimeError(f"Gemini API error: {e.message} (code: {e.code})")
 
             except RuntimeError:
                 raise
@@ -69,5 +80,12 @@ class Gemini_Provider(Base_LLM_Provider):
             except Exception as e:
                 print(f"    [Gemini] Unexpected error: {type(e).__name__}: {str(e)}")
                 raise RuntimeError(f"Gemini unexpected error: {str(e)}")
+            except RuntimeError:
+                raise
 
+            except Exception as e:
+                print(f"    [Gemini] Unexpected error: {type(e).__name__}: {str(e)}")
+                raise RuntimeError(f"Gemini unexpected error: {str(e)}")
+
+        raise RuntimeError(f"Gemini API failed after {LLM_MAX_RETRIES} retries: {last_error}")
         raise RuntimeError(f"Gemini API failed after {LLM_MAX_RETRIES} retries: {last_error}")

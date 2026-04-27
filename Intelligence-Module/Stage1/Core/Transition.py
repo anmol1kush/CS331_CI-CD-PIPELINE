@@ -91,6 +91,7 @@ def generate_tests(state, strategy):
 
     state.add_generated_tests(tests, strategy.value if strategy else "unknown")
     run_test_suite(state)
+    run_test_suite(state)
 
 
 def run_test_suite(state):

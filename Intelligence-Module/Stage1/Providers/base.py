@@ -12,7 +12,13 @@ class Base_LLM_Provider(ABC):
     def generate(self, prompt: str, temperature: float = None) -> str:
         """
         Accepts a fully formatted prompt string.
+        Accepts a fully formatted prompt string.
 
+        Must:
+        - Return the raw response string from the LLM
+        - Raise an exception if generation fails
+        - JSON parsing is handled by the caller (llm_test_generator)
+        """
         Must:
         - Return the raw response string from the LLM
         - Raise an exception if generation fails

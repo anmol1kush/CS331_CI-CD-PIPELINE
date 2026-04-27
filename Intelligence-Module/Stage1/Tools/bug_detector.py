@@ -43,6 +43,7 @@ def detect_bugs(results, tests):
             failures.append({
                 "test_id": test.get("test_id", "unknown"),
                 "error": "Tests was not executed — result missing",
+                "error": "Tests was not executed — result missing",
                 "status": "missing",
                 "input": test.get("input"),
                 "strategy": test.get("strategy"),
@@ -78,6 +79,7 @@ def detect_bugs(results, tests):
                 continue
 
             actual = result.get("output")
+            mode = test.get("comparison_mode", "exact")
             mode = test.get("comparison_mode", "exact")
 
             if not compare_outputs(actual, expected):

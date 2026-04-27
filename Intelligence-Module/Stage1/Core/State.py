@@ -39,6 +39,7 @@ class State:
         self.line_coverage: float = 0.0
         self.branch_coverage: float = 0.0
         self.all_executed_lines: set = set()
+        self.all_executed_lines: set = set()
 
         # agent control
         self.iteration: int = 0
@@ -98,6 +99,7 @@ class State:
         return {
             "language": self.language,
             "execution_model": self.execution_model,
+            "source_code": self.source_code,
             "source_code": self.source_code,
             "structural_features": self.structural_features,
             "generated_tests": self.generated_tests,
