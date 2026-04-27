@@ -24,13 +24,14 @@ from abc import ABC, abstractmethod
 class ExecutorBase(ABC):
 
     @abstractmethod
-    def execute_callable(self, source_code: str, tests: list) -> tuple:
+    def execute_callable(self, source_code: str, tests: list, structural_features: dict = None) -> tuple:
         """
         Execute tests against a callable method/function.
 
         Args:
             source_code: full source code string
             tests: list of test dicts with "method_name", "input", "expected_output"
+            structural_features: parser output with class_hierarchy, method_signatures, etc.
 
         Returns:
             (results: list[dict], all_executed_lines: set)
@@ -64,7 +65,7 @@ class ExecutorBase(ABC):
         """
         pass
 
-    def run(self, source_code: str, tests: list, execution_model: str) -> tuple:
+    def run(self, source_code: str, tests: list, execution_model: str, structural_features: dict = None) -> tuple:
         """
         Dispatcher — routes to the correct execution method.
 
@@ -72,12 +73,13 @@ class ExecutorBase(ABC):
             source_code: full source code string
             tests: list of test dicts
             execution_model: "callable_method" | "stdin_program" | "script"
+            structural_features: parser output with class_hierarchy, method_signatures, etc.
 
         Returns:
             (results: list[dict], all_executed_lines: set)
         """
         if execution_model == "callable_method":
-            return self.execute_callable(source_code, tests)
+            return self.execute_callable(source_code, tests, structural_features)
         elif execution_model == "stdin_program":
             return self.execute_stdin(source_code, tests)
         elif execution_model == "script":

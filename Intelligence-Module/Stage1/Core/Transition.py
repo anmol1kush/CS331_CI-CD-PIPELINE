@@ -107,7 +107,8 @@ def run_test_suite(state):
         return
 
     results, executed_lines = run_tests(state.source_code, pending_tests, state.execution_model,
-                                        language=state.language)
+                                        language=state.language,
+                                        structural_features=state.structural_features)
     state.all_executed_lines.update(executed_lines)
     coverage = compute_coverage(state.source_code, state.all_executed_lines, state.executable_lines,
                                 language=state.language)

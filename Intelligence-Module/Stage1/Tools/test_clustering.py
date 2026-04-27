@@ -76,6 +76,11 @@ class Test_Clustering_Engine:
         # Cluster
         vectors = np.array([sig["cluster_vector"] for sig in signatures])
 
+        row_norms = np.linalg.norm(vectors, axis=1)
+        zero_mask = row_norms == 0
+        if np.any(zero_mask):
+            vectors[zero_mask] = 1e-10
+
         model = AgglomerativeClustering(
             n_clusters=k,
             metric="cosine",

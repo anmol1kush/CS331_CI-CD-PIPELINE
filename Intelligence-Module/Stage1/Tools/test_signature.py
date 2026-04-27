@@ -373,10 +373,10 @@ class Test_Signature_Engine:
         return coverage_delta + bug_signal
 
     def l2_normalize(self, vector):
-        """L2 normalize. Returns zero vector if norm is 0."""
+        """L2 normalize. Returns uniform small-value vector if norm is 0."""
         norm = math.sqrt(sum(x * x for x in vector))
         if norm == 0:
-            return vector
+            return [1e-10] * len(vector)
         return [x / norm for x in vector]
 
     def get_cluster_vector_dimension(self):

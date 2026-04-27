@@ -12,6 +12,7 @@ import json
 import time
 from Stage1.config import TEST_TIMEOUT
 from Stage1.Executors.executor_base import ExecutorBase
+from Stage1.Executors.type_marshaller import get_marshalling
 
 
 class CCppExecutor(ExecutorBase):
@@ -21,7 +22,7 @@ class CCppExecutor(ExecutorBase):
         self.compiler = "gcc" if language == "c" else "g++"
         self.suffix = ".c" if language == "c" else ".cpp"
 
-    def execute_callable(self, source_code, tests):
+    def execute_callable(self, source_code, tests, structural_features=None):
         """
         C/C++ callable mode: wrap source with a main() that calls the function.
         """
@@ -32,7 +33,9 @@ class CCppExecutor(ExecutorBase):
             method_name = test.get("method_name")
             test_input = test.get("input", [])
 
-            wrapper = self.buildcallable_wrapper(source_code, method_name, test_input)
+            wrapper = self.buildcallable_wrapper(
+                source_code, method_name, test_input, structural_features
+            )
             result = self.compile_and_run(wrapper)
             result["test_id"] = ind
 
@@ -87,8 +90,60 @@ class CCppExecutor(ExecutorBase):
 
         return [result], per_test_lines
 
-    def buildcallable_wrapper(self, source_code, method_name, test_input):
+    def buildcallable_wrapper(self, source_code, method_name, test_input, structural_features=None):
         """Build a C/C++ wrapper with main() that calls the target function."""
+        marshalling = get_marshalling(
+            source_code, structural_features, method_name, test_input, self.language
+        )
+
+        if marshalling["needs_marshalling"]:
+            helper_code = marshalling["helper_code"]
+            arg_exprs = marshalling["arg_expressions"]
+            setup_code = marshalling.get("setup_code", "")
+            output_ser = marshalling["output_serializer"]
+            args_str = ", ".join(arg_exprs)
+
+            if self.language == "c":
+                wrapper = f"""
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+{source_code}
+
+{helper_code}
+
+int main() {{
+{setup_code}
+    struct ListNode* _result = {method_name}({args_str});
+    {output_ser}(_result);
+    printf("\\n");
+    return 0;
+}}
+"""
+            else:
+                wrapper = f"""
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+#include <string>
+#include <iostream>
+using namespace std;
+
+{source_code}
+
+{helper_code}
+
+int main() {{
+{setup_code}
+    Solution sol;
+    auto _result = sol.{method_name}({args_str});
+    cout << {output_ser}(_result) << endl;
+    return 0;
+}}
+"""
+            return wrapper
+
         args_str = ", ".join(self.c_literal(arg) for arg in test_input)
 
         wrapper = f"""

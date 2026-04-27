@@ -13,11 +13,21 @@ import json
 import time
 from Stage1.config import TEST_TIMEOUT
 from Stage1.Executors.executor_base import ExecutorBase
+from Stage1.Executors.type_marshaller import get_marshalling, detect_complex_types
+
+
+def _extract_ll_class(source_code):
+    """Extract the linked list class name from source code for Java cast."""
+    detected = detect_complex_types(source_code, None)
+    for name, kind in detected.items():
+        if kind == "linked_list":
+            return name
+    return "Object"
 
 
 class JavaExecutor(ExecutorBase):
 
-    def execute_callable(self, source_code, tests):
+    def execute_callable(self, source_code, tests, structural_features=None):
         results = []
         all_executed_lines = set()
 
@@ -25,7 +35,9 @@ class JavaExecutor(ExecutorBase):
             method_name = test.get("method_name")
             test_input = test.get("input", [])
 
-            wrapper = self.build_callable_wrapper(source_code, method_name, test_input)
+            wrapper = self.build_callable_wrapper(
+                source_code, method_name, test_input, structural_features
+            )
             result = self.compile_and_run(wrapper)
             result["test_id"] = ind
 
@@ -62,15 +74,45 @@ class JavaExecutor(ExecutorBase):
 
         return [result], per_test_lines
 
-    def build_callable_wrapper(self, source_code, method_name, test_input):
+    def build_callable_wrapper(self, source_code, method_name, test_input, structural_features=None):
         """
         Build a Java wrapper that instantiates Solution class,
         calls the method, and prints JSON output.
         """
-        # Serialize args as Java literals (simplified)
+        marshalling = get_marshalling(
+            source_code, structural_features, method_name, test_input, "java"
+        )
+
+        if marshalling["needs_marshalling"]:
+            helper_code = marshalling["helper_code"]
+            arg_exprs = marshalling["arg_expressions"]
+            setup_code = marshalling.get("setup_code", "")
+            output_ser = marshalling["output_serializer"]
+            args_str = ", ".join(arg_exprs)
+
+            wrapper = f"""
+{source_code}
+
+class TestHarness {{
+{helper_code}
+
+    public static void main(String[] args) {{
+        try {{
+{setup_code}
+            Solution instance = new Solution();
+            Object result = instance.{method_name}({args_str});
+            System.out.println({output_ser}(({_extract_ll_class(source_code)})result));
+        }} catch (Exception e) {{
+            System.err.println("__EXCEPTION__:" + e.getMessage());
+            System.exit(1);
+        }}
+    }}
+}}
+"""
+            return wrapper
+
         args_str = ", ".join(self.java_literal(arg) for arg in test_input)
 
-        # Extract the class body (remove public class declaration wrapper if needed)
         wrapper = f"""
 {source_code}
 
